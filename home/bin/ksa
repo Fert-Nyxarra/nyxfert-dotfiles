@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Kitten Space Agency — нативный Linux-билд в FHS-окружении steam-run.
+# Самому бинарнику нужны libstdc++.so.6 и libvulkan.so.1, которых нет
+# по FHS-путям в NixOS; steam-run их подкладывает.
+set -euo pipefail
+
+KSA_DIR="${KSA_DIR:-$HOME/ksa_linux_v2026.10.19.5638}"
+cd "$KSA_DIR"
+
+# Vulkan-драйвер NVIDIA из текущей системы
+export VK_ICD_FILENAMES="${VK_ICD_FILENAMES:-/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.json}"
+# GLFW идёт по X11 (XWayland) и без явной темы ищет курсор "default", которого нет
+export XCURSOR_THEME="${XCURSOR_THEME:-Bibata-Modern-Ice}"
+export XCURSOR_SIZE="${XCURSOR_SIZE:-24}"
+
+# .NET спотыкается на ru_RU в некоторых сборках ICU — держим инвариант чисел
+export LC_NUMERIC=C
+
+exec steam-run ./KSA "$@"

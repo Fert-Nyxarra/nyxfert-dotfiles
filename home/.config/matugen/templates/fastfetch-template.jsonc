@@ -1,0 +1,66 @@
+// ~/.config/matugen/templates/fastfetch-template.jsonc
+// генерирует matugen -> ~/.config/fastfetch/config.jsonc
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  "logo": {
+    "type": "builtin",
+    "source": "nixos_small",
+    "color": {
+      "1": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}",
+      "2": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}",
+      "3": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}",
+      "4": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}",
+      "5": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}",
+      "6": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}",
+      "7": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}",
+      "8": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}",
+      "9": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}"
+    },
+    "padding": { "top": 1, "left": 2, "right": 3 }
+  },
+
+  "display": {
+    "separator": "  ",
+    "color": {
+      "keys": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}",
+      "title": "38;2;{{colors.secondary.dark.red}};{{colors.secondary.dark.green}};{{colors.secondary.dark.blue}}",
+      "output": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}"
+    }
+  },
+
+  "modules": [
+    {
+      "type": "title",
+      "color": {
+        "user": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}",
+        "at": "38;2;{{colors.primary.dark.red}};{{colors.primary.dark.green}};{{colors.primary.dark.blue}}",
+        "host": "38;2;{{colors.on_surface.dark.red}};{{colors.on_surface.dark.green}};{{colors.on_surface.dark.blue}}"
+      }
+    },
+    {
+      "type": "separator",
+      "string": "─",
+      "length": 18,
+      "outputColor": "38;2;{{colors.secondary.dark.red}};{{colors.secondary.dark.green}};{{colors.secondary.dark.blue}}"
+    },
+
+    { "type": "os",       "key": "  os    " },
+    { "type": "kernel",   "key": "  kernel" },
+    { "type": "uptime",   "key": "󰅐  uptime" },
+    { "type": "packages", "key": "󰏖  pkgs  " },
+    { "type": "shell",    "key": "  shell " },
+    { "type": "wm",       "key": "  wm    " },
+    { "type": "terminal", "key": "  term  " },
+
+    { "type": "cpu",    "key": "󰻠  cpu   ", "format": "{name}" },
+    { "type": "gpu",    "key": "󰢮  gpu   ", "format": "{name}" },
+    { "type": "memory", "key": "󰍛  memory" },
+    { "type": "disk",   "key": "󰋊  disk  ", "format": "{size-used} / {size-total} ({size-percentage})" },
+
+    {
+      "type": "custom",
+      "format": "{#38;2;{{ colors.on_surface.dark.red }};{{ colors.on_surface.dark.green }};{{ colors.on_surface.dark.blue }}}● {#38;2;{{ colors.secondary.dark.red }};{{ colors.secondary.dark.green }};{{ colors.secondary.dark.blue }}}● {#38;2;{{ colors.primary.dark.red }};{{ colors.primary.dark.green }};{{ colors.primary.dark.blue }}}● {#38;2;{{ colors.tertiary.dark.red }};{{ colors.tertiary.dark.green }};{{ colors.tertiary.dark.blue }}}● {#38;2;{{ colors.primary_container.dark.red }};{{ colors.primary_container.dark.green }};{{ colors.primary_container.dark.blue }}}●"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+    "colors": {
+        "/home/nyxfert/Wallpapers/anime1.png": "#4bebaf",
+        "/home/nyxfert/Wallpapers/anime2.png": "#ff004e",
+        "/home/nyxfert/Wallpapers/ascii1.png": "#b31428",
+        "/home/nyxfert/Wallpapers/pixelart1.png": "#eb4b87",
+        "/home/nyxfert/Wallpapers/pixelart2.jpg": "#eb4b87",
+        "/home/nyxfert/Wallpapers/space1.jpg": "#4b73eb",
+        "/home/nyxfert/Wallpapers/space2.jpg": "",
+        "/home/nyxfert/Wallpapers/space3.jpg": "#eb4bc3"
+    },
+    "contrast": {
+        "/home/nyxfert/Wallpapers/anime1.png": 1,
+        "/home/nyxfert/Wallpapers/anime2.png": -0.4,
+        "/home/nyxfert/Wallpapers/ascii1.png": -1,
+        "/home/nyxfert/Wallpapers/pixelart1.png": -0.3,
+        "/home/nyxfert/Wallpapers/pixelart2.jpg": -0.3,
+        "/home/nyxfert/Wallpapers/space1.jpg": 0,
+        "/home/nyxfert/Wallpapers/space3.jpg": -0.4
+    },
+    "mono": {
+        "/home/nyxfert/Wallpapers/anime1.png": false,
+        "/home/nyxfert/Wallpapers/anime2.png": false,
+        "/home/nyxfert/Wallpapers/ascii1.png": false,
+        "/home/nyxfert/Wallpapers/pixelart1.png": false,
+        "/home/nyxfert/Wallpapers/pixelart2.jpg": false,
+        "/home/nyxfert/Wallpapers/space1.jpg": false,
+        "/home/nyxfert/Wallpapers/space3.jpg": false
+    }
+}

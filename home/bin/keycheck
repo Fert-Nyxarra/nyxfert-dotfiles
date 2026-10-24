@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Ловит нажатия клавиш на уровне Wayland и печатает хронологию:
+# реальный keycode, keysym и состояние модификаторов.
+# Запуск: keycheck [секунды]   (по умолчанию 30)
+# Нажимать нужно В ОТКРЫВШЕМСЯ ОКНЕ wev — оно должно быть в фокусе.
+set -u
+secs="${1:-30}"
+log="$(mktemp -t keycheck-XXXXXX.log)"
+
+wev_bin="$(command -v wev || true)"
+if [ -z "$wev_bin" ]; then
+    echo "wev не установлен в профиле, беру из nixpkgs..." >&2
+    nix run nixpkgs#wev -- -f wl_keyboard > "$log" 2>&1 &
+else
+    "$wev_bin" -f wl_keyboard > "$log" 2>&1 &
+fi
+wev_pid=$!
+
+echo "Ловлю клавиши ${secs} с. Кликни по окну wev и нажимай."
+sleep "$secs"
+kill "$wev_pid" 2>/dev/null
+wait "$wev_pid" 2>/dev/null
+
+echo
+echo "=== Хронология нажатий ==="
+grep -A1 'state: 1 (pressed)' "$log" \
+  | grep -E 'key: serial|sym:' \
+  | paste - - \
+  | sed -E 's/.*time: ([0-9]+); key: ([0-9]+).*sym: ([A-Za-z_0-9]+).*utf8: (.*)/\1|key=\2|\3|\4/' \
+  | awk -F'|' '{t=$1; d=(prev?t-prev:0); prev=t; printf "%+7d ms  %-9s %-14s %s\n", d, $2, $3, $4}'
+
+echo
+echo "=== Состояния модификаторов ==="
+grep 'depressed:' "$log" | sed 's/^ *//' | sort | uniq -c | sort -rn
+echo
+echo "=== Залипшие (latched/locked) модификаторы ==="
+if grep -qE 'latched: 0000[^0]|locked: 0000[^0]' "$log"; then
+    grep -E 'latched: 0000[^0]|locked: 0000[^0]' "$log" | sort | uniq -c
+else
+    echo "нет — всё чисто"
+fi
+echo
+echo "Полный лог: $log"
+echo
+echo "Справка по кодам: 62=правый Shift, 50=левый Shift, 64=левый Alt,"
+echo "108=правый Alt, 105=правый Ctrl, 37=левый Ctrl, 133=Super, 135=Menu"
