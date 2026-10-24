@@ -6,10 +6,16 @@
 #
 # Файл ставит install.sh из того же набора; он же подставляет имя пользователя
 # вместо @USER@ и правит imports.
-{ config, lib, pkgs, inputs ? null, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   user = "@USER@";
+
+  # Входы флейка, если система вообще на флейке. Брать их аргументом модуля
+  # (`{ inputs ? null, ... }`) нельзя: на системе без флейка модульная система
+  # всё равно лезет за ними в _module.args и падает с «attribute 'inputs'
+  # missing» — значение по умолчанию до неё не доходит.
+  flakeInputs = config._module.args.inputs or null;
 
   # Прикладной софт. Панели он не нужен — выключи, если машина под работу.
   withApps = true;
@@ -21,11 +27,11 @@ let
   # matugen 4.2+ обязателен: в 4.0 из nixpkgs нет --prefer, а без него режим
   # «авто» в селекторе обоев падает на картинках с несколькими цветами —
   # matugen хочет, чтобы выбор сделал человек в терминале.
-  matugenFromFlake = inputs != null && inputs ? matugen;
+  matugenFromFlake = flakeInputs != null && flakeInputs ? matugen;
 
   matugenPkg =
     if matugenFromFlake
-    then inputs.matugen.packages.${pkgs.stdenv.hostPlatform.system}.default
+    then flakeInputs.matugen.packages.${pkgs.stdenv.hostPlatform.system}.default
     else pkgs.matugen;
 
   # Без чего панель и Hyprland не работают
@@ -195,9 +201,11 @@ in
 
   # Предупреждение видно при каждой сборке, пока matugen берётся из nixpkgs.
   warnings = lib.optional (!matugenFromFlake) ''
-    matugen взят из nixpkgs (4.0), а панели нужен 4.2+: в 4.0 нет --prefer,
-    и режим «авто» в селекторе обоев будет падать на картинках с несколькими
-    цветами. Добавь в flake.nix вход matugen.url = "github:InioX/matugen"
-    и передай inputs в модули через specialArgs.
+    matugen взят из nixpkgs (4.0), а не из флейка. Панель это переживёт:
+    она сама спрашивает версию и не передаёт --prefer, если его нет. Но
+    режим «авто» в селекторе обоев на картинках с несколькими кандидатами
+    цвета работать не будет — matugen в 4.0 хочет, чтобы выбор сделал
+    человек в терминале. Лечится входом флейка:
+    inputs.matugen.url = "github:InioX/matugen" плюс specialArgs = { inherit inputs; }.
   '';
 }

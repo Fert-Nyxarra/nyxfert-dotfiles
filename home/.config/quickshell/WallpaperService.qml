@@ -38,6 +38,13 @@ Singleton {
         ? store.adapter.contrast
         : ({})
 
+    // Поддерживает ли matugen --prefer. В 4.0 (та, что в nixpkgs) ключа нет,
+    // и с ним matugen просто ругается на неизвестный аргумент — тема не
+    // применится вовсе. Без него зато падает «авто» на картинках с
+    // несколькими кандидатами цвета, так что передаём его только там, где он
+    // есть.
+    property bool matugenPrefers: true
+
     // путь обоев -> чёрно-белая тема вместо цветной
     readonly property var monoPins: store.adapter && store.adapter.mono
         ? store.adapter.mono
@@ -93,9 +100,11 @@ Singleton {
         let args = ["-t", "scheme-content"];
         if (contrast !== 0) args = args.concat(["--contrast", String(contrast)]);
 
-        return color === ""
+        if (color !== "") return args.concat(["color", "hex", color]);
+
+        return root.matugenPrefers
             ? args.concat(["image", path, "--prefer", "saturation"])
-            : args.concat(["color", "hex", color]);
+            : args.concat(["image", path]);
     }
 
     // применяем: обои, палитра, автозапуск
@@ -157,6 +166,24 @@ Singleton {
             "sed -i 's|hl.exec_cmd(\"swaybg -i [^\"]*\")|" + line.replace(/[|&]/g, "\\\\&") + "|' "
             + root.quote(root.hyprlandConfig)];
         saveLine.running = true;
+    }
+
+    // спрашиваем версию один раз при запуске
+    Process {
+        running: true
+        command: ["matugen", "--version"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // "matugen 4.2.0"
+                const parts = this.text.trim().split(/\s+/);
+                const numbers = (parts.length > 1 ? parts[1] : "0").split(".");
+                const major = parseInt(numbers[0]) || 0;
+                const minor = parseInt(numbers[1]) || 0;
+
+                root.matugenPrefers = major > 4 || (major === 4 && minor >= 1);
+            }
+        }
     }
 
     Process { id: wallpaperSwap }
