@@ -525,7 +525,6 @@ PanelWindow {
 
                         readonly property bool active: Settings.windowLayout === modelData.value
                         readonly property bool scrolling: modelData.value === "scrolling"
-                        readonly property bool unavailable: scrolling && !Settings.scrollingAvailable
 
                         width: 214
                         height: 104
@@ -537,7 +536,6 @@ PanelWindow {
 
                         border.width: active ? 2 : 1
                         border.color: active ? Colors.primary : Theme.panelBorder
-                        opacity: unavailable ? 0.65 : 1
 
                         Behavior on color {
                             ColorAnimation { duration: 140 }
@@ -659,10 +657,10 @@ PanelWindow {
                             y: layoutTitle.y + 20
                             width: parent.width - x - 10
                             wrapMode: Text.WordWrap
-                            text: parent.unavailable ? "нужен плагин hyprscrolling" : modelData.hint
+                            text: modelData.hint
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize - 3
-                            color: parent.unavailable ? Colors.error : Colors.subtext
+                            color: Colors.subtext
                         }
 
                         MouseArea {

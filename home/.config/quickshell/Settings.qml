@@ -31,17 +31,11 @@ Singleton {
     // так проще.
     readonly property var windowAnimations: ["off", "slide", "popin", "fast"]
 
-    // Раскладка окон. tiling — штатный dwindle, scrolling — бесконечная
-    // лента колонок, как в niri; её даёт плагин hyprscrolling, и без него
-    // выбор сохранится, но применить его будет нечем.
+    // Раскладка окон. tiling — штатный dwindle, scrolling — лента колонок,
+    // как в niri. Плагин для этого НЕ нужен: с Hyprland 0.55 раскладка
+    // scrolling встроена (hyprscroller из nixpkgs удалён как заброшенный, а
+    // hyprscrolling исчез из hyprland-plugins именно потому, что уехал в ядро).
     readonly property var windowLayouts: ["tiling", "scrolling"]
-
-    property bool scrollingAvailable: false
-
-    // Если плагин просто установлен пакетом, его .so лежит здесь. Грузим сами
-    // через hyprctl: тогда для скроллинга достаточно добавить пакет в
-    // systemPackages, а hyprland.lua трогать не нужно.
-    readonly property string scrollingPlugin: "/run/current-system/sw/lib/libhyprscrolling.so"
 
     readonly property int windowBorderMax: 12
     readonly property int windowRoundingMax: 24
@@ -130,13 +124,6 @@ Singleton {
 
         store.adapter.windowLayout = value;
         store.writeAdapter();
-
-        // плагин мог быть установлен, но не загружен — пробуем поднять
-        if (value === "scrolling" && !root.scrollingAvailable) {
-            loadPlugin.running = true;
-            return;
-        }
-
         root.applyWindowStyle();
     }
 
@@ -172,12 +159,8 @@ Singleton {
 
     // Применяем через `hyprctl eval`, а не `hyprctl keyword`: конфиг у нас на
     // Lua, и keyword на него отвечает «can't work with non-legacy parsers».
-    // Имя раскладки для Hyprland. Скроллинг просим только если плагин
-    // действительно загружен: иначе Hyprland останется без раскладки вовсе.
     function layoutName(): string {
-        return root.windowLayout === "scrolling" && root.scrollingAvailable
-            ? "scrolling"
-            : "dwindle";
+        return root.windowLayout === "scrolling" ? "scrolling" : "dwindle";
     }
 
     function applyWindowStyle(): void {
@@ -199,31 +182,6 @@ Singleton {
 
     Process { id: applyProcess }
 
-    Process {
-        id: loadPlugin
-
-        command: ["sh", "-c",
-            "[ -f \"$1\" ] && hyprctl plugin load \"$1\" || true", "sh", root.scrollingPlugin]
-
-        onExited: pluginCheck.running = true
-    }
-
-    // Есть ли плагин скроллинга. Спрашиваем у Hyprland, а не ищем файл:
-    // плагин может быть загружен откуда угодно.
-    Process {
-        id: pluginCheck
-
-        running: true
-        command: ["hyprctl", "plugin", "list"]
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.scrollingAvailable = this.text.toLowerCase().includes("scrolling");
-                if (root.loaded) root.applyWindowStyle();
-            }
-        }
-    }
-
     // Настройки раздаются компоновщику при запуске и после каждой его
     // перезагрузки: `hyprctl reload` (его зовёт matugen после смены обоев)
     // возвращает значения из hyprland.lua и затирает наши.
@@ -239,11 +197,7 @@ Singleton {
         target: Hyprland
 
         function onRawEvent(event): void {
-            if (event.name !== "configreloaded") return;
-
-            // плагин могли подключить в конфиге — проверим заново
-            pluginCheck.running = true;
-            root.applyWindowStyle();
+            if (event.name === "configreloaded") root.applyWindowStyle();
         }
     }
 
