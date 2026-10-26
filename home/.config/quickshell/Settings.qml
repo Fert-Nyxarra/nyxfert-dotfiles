@@ -136,29 +136,39 @@ Singleton {
         root.applyWindowStyle();
     }
 
-    // Кусок конфига на Lua для hyprctl eval. Кривые smooth и overshoot
-    // объявлены в hyprland.lua.
+    // Кусок конфига на Lua для hyprctl eval: задаём и появление, и
+    // исчезновение. Одного leaf "windows" мало — в hyprland.lua отдельной
+    // строкой задан windowsOut, а явно заданный потомок перебивает родителя,
+    // и окна закрывались бы всегда одинаково.
+    //
+    // Уход делаем чуть быстрее прихода и без перелёта: пружина на закрытии
+    // читается как подвисание.
     function animationSnippet(kind: string): string {
         if (kind === "off") {
-            return 'hl.animation({ leaf = "windows", enabled = false })';
+            return 'hl.animation({ leaf = "windowsIn", enabled = false }) '
+                + 'hl.animation({ leaf = "windowsOut", enabled = false })';
         }
 
         if (kind === "popin") {
-            return 'hl.animation({ leaf = "windows", enabled = true, speed = 4,'
-                + ' bezier = "overshoot", style = "popin 80%" })';
+            return 'hl.animation({ leaf = "windowsIn", enabled = true, speed = 4,'
+                + ' bezier = "overshoot", style = "popin 80%" }) '
+                + 'hl.animation({ leaf = "windowsOut", enabled = true, speed = 3,'
+                + ' bezier = "smooth", style = "popin 80%" })';
         }
 
         if (kind === "fast") {
-            return 'hl.animation({ leaf = "windows", enabled = true, speed = 2,'
+            return 'hl.animation({ leaf = "windowsIn", enabled = true, speed = 2,'
+                + ' bezier = "smooth", style = "popin 95%" }) '
+                + 'hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.6,'
                 + ' bezier = "smooth", style = "popin 95%" })';
         }
 
-        return 'hl.animation({ leaf = "windows", enabled = true, speed = 3.5,'
-            + ' bezier = "overshoot", style = "slide" })';
+        return 'hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.5,'
+            + ' bezier = "overshoot", style = "slide" }) '
+            + 'hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.5,'
+            + ' bezier = "smooth", style = "slide" })';
     }
 
-    // Применяем через `hyprctl eval`, а не `hyprctl keyword`: конфиг у нас на
-    // Lua, и keyword на него отвечает «can't work with non-legacy parsers».
     function layoutName(): string {
         return root.windowLayout === "scrolling" ? "scrolling" : "dwindle";
     }

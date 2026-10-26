@@ -709,7 +709,7 @@ PanelWindow {
                 id: animationLabel
 
                 y: roundingSlider.y + roundingSlider.height + 22
-                text: "Анимация появления"
+                text: "Анимация окон"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
                 font.weight: Font.DemiBold
@@ -722,9 +722,9 @@ PanelWindow {
 
                 Repeater {
                     model: [
-                        { value: "off",   title: "Выключена", hint: "окно появляется сразу" },
-                        { value: "slide", title: "Выезд",     hint: "выезжает с перелётом" },
-                        { value: "popin", title: "Из точки",  hint: "разворачивается из центра" },
+                        { value: "off",   title: "Выключена", hint: "без анимации" },
+                        { value: "slide", title: "Выезд",     hint: "выезжает и уезжает" },
+                        { value: "popin", title: "Из точки",  hint: "растёт и схлопывается" },
                         { value: "fast",  title: "Быстрая",   hint: "короткий рывок" }
                     ]
 
