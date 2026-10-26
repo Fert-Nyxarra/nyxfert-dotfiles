@@ -34,6 +34,15 @@ let
     then flakeInputs.matugen.packages.${pkgs.stdenv.hostPlatform.system}.default
     else pkgs.matugen;
 
+  # Плагин бесконечной ленты окон (как в niri). Берётся из официального
+  # флейка hyprland-plugins, потому что в nixpkgs его нет, а hyprscroller
+  # оттуда удалён как заброшенный. Панель загрузит его сама по выбору
+  # «Скроллинг» в настройках — hyprland.lua править не нужно.
+  scrollingPlugin =
+    if flakeInputs != null && flakeInputs ? hyprland-plugins
+    then [ flakeInputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system}.hyprscrolling ]
+    else [];
+
   # Без чего панель и Hyprland не работают
   corePackages = with pkgs; [
     quickshell          # сама панель
@@ -196,6 +205,7 @@ in
 
   environment.systemPackages =
     corePackages
+    ++ scrollingPlugin
     ++ lib.optionals withApps appPackages
     ++ lib.optionals withGames gamePackages;
 

@@ -103,7 +103,8 @@ PanelWindow {
 
         anchors.centerIn: parent
         width: 720
-        height: 460
+        // высоты хватает на самую длинную вкладку — «Окна»
+        height: 580
         radius: Theme.popupRadius
         color: Theme.panelColor
         border.width: 1
@@ -233,7 +234,7 @@ PanelWindow {
             Text {
                 id: pageTitle
 
-                text: "Верхняя панель"
+                text: "Панель"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize + 3
                 font.weight: Font.DemiBold
@@ -487,10 +488,199 @@ PanelWindow {
                 color: Colors.subtext
             }
 
+            // раскладка окон с живым предпросмотром
+            Text {
+                id: layoutLabel
+
+                y: 56
+                text: "Раскладка окон"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                font.weight: Font.DemiBold
+                color: Colors.text
+            }
+
+            Row {
+                id: layoutRow
+
+                y: layoutLabel.y + 26
+                spacing: 10
+
+                Repeater {
+                    model: [
+                        {
+                            value: "tiling",
+                            title: "Тайлинг",
+                            hint: "окна делят экран, как сейчас"
+                        },
+                        {
+                            value: "scrolling",
+                            title: "Скроллинг",
+                            hint: "лента колонок, как в niri"
+                        }
+                    ]
+
+                    Rectangle {
+                        required property var modelData
+
+                        readonly property bool active: Settings.windowLayout === modelData.value
+                        readonly property bool scrolling: modelData.value === "scrolling"
+                        readonly property bool unavailable: scrolling && !Settings.scrollingAvailable
+
+                        width: 214
+                        height: 104
+                        radius: 12
+
+                        color: active ? Theme.alpha(Colors.primary, 0.16)
+                            : layoutMouse.containsMouse ? Theme.alpha(Colors.text, 0.08)
+                            : Theme.alpha(Colors.surfaceContainerHigh, 0.45)
+
+                        border.width: active ? 2 : 1
+                        border.color: active ? Colors.primary : Theme.panelBorder
+                        opacity: unavailable ? 0.65 : 1
+
+                        Behavior on color {
+                            ColorAnimation { duration: 140 }
+                        }
+
+                        // мини-экран с окнами
+                        Rectangle {
+                            id: preview
+
+                            x: 12
+                            y: 12
+                            width: 78
+                            height: 54
+                            radius: 6
+                            color: Theme.alpha(Colors.outline, 0.22)
+                            border.width: 1
+                            border.color: Theme.panelBorder
+                            clip: true
+
+                            readonly property color windowColor: parent.active
+                                ? Colors.primary
+                                : Colors.subtext
+
+                            // тайлинг: одно большое слева, два справа
+                            Rectangle {
+                                visible: !parent.parent.scrolling
+                                x: 5
+                                y: 5
+                                width: 32
+                                height: parent.height - 10
+                                radius: 3
+                                color: preview.windowColor
+                            }
+
+                            Rectangle {
+                                visible: !parent.parent.scrolling
+                                x: 41
+                                y: 5
+                                width: 32
+                                height: 20
+                                radius: 3
+                                color: preview.windowColor
+                                opacity: 0.75
+                            }
+
+                            Rectangle {
+                                visible: !parent.parent.scrolling
+                                x: 41
+                                y: 29
+                                width: 32
+                                height: 20
+                                radius: 3
+                                color: preview.windowColor
+                                opacity: 0.55
+                            }
+
+                            // скроллинг: лента колонок, уезжающая за край
+                            Row {
+                                id: strip
+
+                                visible: parent.parent.scrolling
+                                y: 5
+                                spacing: 4
+
+                                // лента едет влево и возвращается — видно, что
+                                // она бесконечная, а не просто три окна
+                                SequentialAnimation on x {
+                                    running: strip.visible
+                                    loops: Animation.Infinite
+
+                                    NumberAnimation {
+                                        from: 5
+                                        to: -27
+                                        duration: 2200
+                                        easing.type: Easing.InOutCubic
+                                    }
+
+                                    PauseAnimation { duration: 400 }
+
+                                    NumberAnimation {
+                                        from: -27
+                                        to: 5
+                                        duration: 2200
+                                        easing.type: Easing.InOutCubic
+                                    }
+
+                                    PauseAnimation { duration: 400 }
+                                }
+
+                                Repeater {
+                                    model: 4
+
+                                    Rectangle {
+                                        required property int index
+
+                                        width: 28
+                                        height: preview.height - 10
+                                        radius: 3
+                                        color: preview.windowColor
+                                        opacity: index === 1 ? 1 : 0.6
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            id: layoutTitle
+
+                            x: preview.x + preview.width + 12
+                            y: 16
+                            text: modelData.title
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            color: parent.active ? Colors.primary : Colors.text
+                        }
+
+                        Text {
+                            x: layoutTitle.x
+                            y: layoutTitle.y + 20
+                            width: parent.width - x - 10
+                            wrapMode: Text.WordWrap
+                            text: parent.unavailable ? "нужен плагин hyprscrolling" : modelData.hint
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize - 3
+                            color: parent.unavailable ? Colors.error : Colors.subtext
+                        }
+
+                        MouseArea {
+                            id: layoutMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Settings.setWindowLayout(modelData.value)
+                        }
+                    }
+                }
+            }
+
             SettingSlider {
                 id: borderSlider
 
-                y: 62
+                y: layoutRow.y + 122
                 width: parent.width - 20
 
                 label: "Толщина рамки окна"
