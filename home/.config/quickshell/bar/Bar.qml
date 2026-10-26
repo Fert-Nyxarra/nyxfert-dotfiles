@@ -89,7 +89,8 @@ PanelWindow {
         id: surface
 
         anchors.fill: parent
-        radius: Theme.radius
+        // в режиме «панель» barRadius равен нулю — углы прямые
+        radius: Theme.barRadius
         color: Theme.panelColor
         border.width: 1
         border.color: Theme.panelBorder
@@ -102,9 +103,9 @@ PanelWindow {
         // меню — при закрытии оставался острым ещё почти секунду.
         // слева к острову прижаты двое: лаунчер и история буфера, —
         // поэтому угол разглаживает тот, кто открыт
-        bottomLeftRadius: Theme.radius
+        bottomLeftRadius: Theme.barRadius
             * (1 - Math.max(launcher.menuProgress, clipboardMenu.revealProgress))
-        bottomRightRadius: Theme.radius * (1 - notifications.menuProgress)
+        bottomRightRadius: Theme.barRadius * (1 - notifications.menuProgress)
 
         // приёмник клавиатуры: сам ничего не рисует, только пересылает нажатия
         Item {
