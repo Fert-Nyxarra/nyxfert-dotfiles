@@ -21,7 +21,8 @@ PanelWindow {
     property int tab: 0
 
     readonly property var tabs: [
-        { title: "Панель", hint: "положение и внешний вид" }
+        { title: "Панель", hint: "положение и внешний вид" },
+        { title: "Окна",   hint: "рамка, скругление, анимация" }
     ]
 
     WlrLayershell.namespace: "quickshell:settings"
@@ -452,6 +453,154 @@ PanelWindow {
                         }
                     }
                 }
+            }
+        }
+
+        //// содержимое вкладки «Окна» //////////////////////////////////////
+
+        Item {
+            id: windowsPage
+
+            x: sidebar.width + 24
+            y: 20
+            width: card.width - sidebar.width - 48
+            height: card.height - 40
+            visible: root.tab === 1
+
+            Text {
+                id: windowsTitle
+
+                text: "Окна"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize + 3
+                font.weight: Font.DemiBold
+                color: Colors.text
+            }
+
+            Text {
+                id: windowsHint
+
+                y: windowsTitle.height + 4
+                text: "Настройки Hyprland, применяются сразу"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize - 2
+                color: Colors.subtext
+            }
+
+            SettingSlider {
+                id: borderSlider
+
+                y: 62
+                width: parent.width - 20
+
+                label: "Толщина рамки окна"
+                zeroLabel: "выкл"
+                from: 0
+                to: Settings.windowBorderMax
+                value: Settings.windowBorder
+
+                onMoved: amount => Settings.setWindowBorder(amount)
+            }
+
+            SettingSlider {
+                id: roundingSlider
+
+                y: borderSlider.y + borderSlider.height + 16
+                width: parent.width - 20
+
+                label: "Скругление углов"
+                zeroLabel: "без скругления"
+                from: 0
+                to: Settings.windowRoundingMax
+                value: Settings.windowRounding
+
+                onMoved: amount => Settings.setWindowRounding(amount)
+            }
+
+            Text {
+                id: animationLabel
+
+                y: roundingSlider.y + roundingSlider.height + 22
+                text: "Анимация появления"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                font.weight: Font.DemiBold
+                color: Colors.text
+            }
+
+            Row {
+                y: animationLabel.y + 28
+                spacing: 8
+
+                Repeater {
+                    model: [
+                        { value: "off",   title: "Выключена", hint: "окно появляется сразу" },
+                        { value: "slide", title: "Выезд",     hint: "выезжает с перелётом" },
+                        { value: "popin", title: "Из точки",  hint: "разворачивается из центра" },
+                        { value: "fast",  title: "Быстрая",   hint: "короткий рывок" }
+                    ]
+
+                    Rectangle {
+                        required property var modelData
+
+                        readonly property bool active: Settings.windowAnimation === modelData.value
+
+                        width: 104
+                        height: 74
+                        radius: 12
+
+                        color: active ? Theme.alpha(Colors.primary, 0.16)
+                            : animationMouse.containsMouse ? Theme.alpha(Colors.text, 0.08)
+                            : Theme.alpha(Colors.surfaceContainerHigh, 0.45)
+
+                        border.width: active ? 2 : 1
+                        border.color: active ? Colors.primary : Theme.panelBorder
+
+                        Behavior on color {
+                            ColorAnimation { duration: 140 }
+                        }
+
+                        Text {
+                            x: 10
+                            y: 12
+                            width: parent.width - 20
+                            text: modelData.title
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize - 1
+                            color: parent.active ? Colors.primary : Colors.text
+                        }
+
+                        Text {
+                            x: 10
+                            y: 34
+                            width: parent.width - 20
+                            wrapMode: Text.WordWrap
+                            text: modelData.hint
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize - 4
+                            color: Colors.subtext
+                        }
+
+                        MouseArea {
+                            id: animationMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Settings.setWindowAnimation(modelData.value)
+                        }
+                    }
+                }
+            }
+
+            Text {
+                y: parent.height - height - 10
+                width: parent.width - 20
+                wrapMode: Text.WordWrap
+                text: "Значения держит панель и возвращает их Hyprland после каждой его перезагрузки — hyprland.lua при этом не меняется."
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize - 3
+                color: Colors.outline
             }
         }
     }

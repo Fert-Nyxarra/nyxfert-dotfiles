@@ -13,6 +13,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 
 Singleton {
@@ -23,6 +24,15 @@ Singleton {
 
     readonly property var barPositions: ["top", "bottom", "left", "right"]
     readonly property var barModes: ["island", "panel"]
+
+    // Оформление окон живёт в Hyprland, а не в панели. Храним выбор у себя и
+    // раздаём компоновщику через hyprctl: править hyprland.lua опаснее (это
+    // код, а не набор ключей), да и вернуть прежнее значение из окна настроек
+    // так проще.
+    readonly property var windowAnimations: ["off", "slide", "popin", "fast"]
+
+    readonly property int windowBorderMax: 12
+    readonly property int windowRoundingMax: 24
 
     // Читаем прямо из адаптера: отдельное свойство со встречной записью
     // замыкает круг «изменилось здесь → изменилось там» и валит QML —
@@ -47,6 +57,19 @@ Singleton {
     // «остров» — со скруглением и отступами, «панель» — во всю кромку
     readonly property bool barIsland: root.barMode === "island"
 
+    readonly property int windowBorder: store.adapter
+        ? Math.max(0, Math.min(root.windowBorderMax, store.adapter.windowBorder))
+        : 3
+
+    readonly property int windowRounding: store.adapter
+        ? Math.max(0, Math.min(root.windowRoundingMax, store.adapter.windowRounding))
+        : 0
+
+    readonly property string windowAnimation: store.adapter
+        && root.windowAnimations.indexOf(store.adapter.windowAnimation) >= 0
+        ? store.adapter.windowAnimation
+        : "slide"
+
     // Настройки прочитаны (или точно не будут). Панель ждёт этого флага,
     // прежде чем показаться: слой wlr-layer-shell коммитит свои отступы при
     // первом показе, и пришедшее следом значение их уже не переставит —
@@ -68,12 +91,89 @@ Singleton {
         store.writeAdapter();
     }
 
+    function setWindowBorder(value: int): void {
+        if (!store.adapter) return;
+
+        store.adapter.windowBorder = Math.max(0, Math.min(root.windowBorderMax, value));
+        store.writeAdapter();
+        root.applyWindowStyle();
+    }
+
+    function setWindowRounding(value: int): void {
+        if (!store.adapter) return;
+
+        store.adapter.windowRounding = Math.max(0, Math.min(root.windowRoundingMax, value));
+        store.writeAdapter();
+        root.applyWindowStyle();
+    }
+
+    function setWindowAnimation(value: string): void {
+        if (root.windowAnimations.indexOf(value) < 0) return;
+        if (!store.adapter) return;
+
+        store.adapter.windowAnimation = value;
+        store.writeAdapter();
+        root.applyWindowStyle();
+    }
+
+    // Кусок конфига на Lua для hyprctl eval. Кривые smooth и overshoot
+    // объявлены в hyprland.lua.
+    function animationSnippet(kind: string): string {
+        if (kind === "off") {
+            return 'hl.animation({ leaf = "windows", enabled = false })';
+        }
+
+        if (kind === "popin") {
+            return 'hl.animation({ leaf = "windows", enabled = true, speed = 4,'
+                + ' bezier = "overshoot", style = "popin 80%" })';
+        }
+
+        if (kind === "fast") {
+            return 'hl.animation({ leaf = "windows", enabled = true, speed = 2,'
+                + ' bezier = "smooth", style = "popin 95%" })';
+        }
+
+        return 'hl.animation({ leaf = "windows", enabled = true, speed = 3.5,'
+            + ' bezier = "overshoot", style = "slide" })';
+    }
+
+    // Применяем через `hyprctl eval`, а не `hyprctl keyword`: конфиг у нас на
+    // Lua, и keyword на него отвечает «can't work with non-legacy parsers».
+    function applyWindowStyle(): void {
+        applyProcess.command = ["hyprctl", "eval",
+            "hl.config({ general = { border_size = " + root.windowBorder + " },"
+            + " decoration = { rounding = " + root.windowRounding + " } }) "
+            + root.animationSnippet(root.windowAnimation)];
+        applyProcess.running = true;
+    }
+
     function setBarMode(value: string): void {
         if (root.barModes.indexOf(value) < 0) return;
         if (!store.adapter) return;
 
         store.adapter.barMode = value;
         store.writeAdapter();
+    }
+
+    Process { id: applyProcess }
+
+    // Настройки раздаются компоновщику при запуске и после каждой его
+    // перезагрузки: `hyprctl reload` (его зовёт matugen после смены обоев)
+    // возвращает значения из hyprland.lua и затирает наши.
+    onLoadedChanged: if (root.loaded) root.applyWindowStyle()
+
+    // Значения могли измениться не только из окна настроек, но и правкой
+    // файла руками — раздаём компоновщику любое изменение.
+    onWindowBorderChanged: if (root.loaded) root.applyWindowStyle()
+    onWindowRoundingChanged: if (root.loaded) root.applyWindowStyle()
+    onWindowAnimationChanged: if (root.loaded) root.applyWindowStyle()
+
+    Connections {
+        target: Hyprland
+
+        function onRawEvent(event): void {
+            if (event.name === "configreloaded") root.applyWindowStyle();
+        }
     }
 
     // каталог для состояния может ещё не существовать
@@ -108,6 +208,10 @@ Singleton {
         adapter: JsonAdapter {
             property string barPosition: "top"
             property string barMode: "island"
+
+            property int windowBorder: 3
+            property int windowRounding: 0
+            property string windowAnimation: "slide"
         }
     }
 }
