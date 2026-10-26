@@ -51,7 +51,7 @@ local fileManager = "thunar"
 --
 hl.on("hyprland.start", function () 
   hl.exec_cmd("qs")
-  hl.exec_cmd("swaybg -i /home/nyxfert/Wallpapers/pixelart2.jpg")
+  hl.exec_cmd("swaybg -i /home/nyxfert/Wallpapers/anime2.png")
 end)
 
 

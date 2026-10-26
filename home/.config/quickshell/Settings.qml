@@ -47,6 +47,12 @@ Singleton {
     // «остров» — со скруглением и отступами, «панель» — во всю кромку
     readonly property bool barIsland: root.barMode === "island"
 
+    // Настройки прочитаны (или точно не будут). Панель ждёт этого флага,
+    // прежде чем показаться: слой wlr-layer-shell коммитит свои отступы при
+    // первом показе, и пришедшее следом значение их уже не переставит —
+    // получался остров с прямыми углами.
+    property bool loaded: false
+
     // хоткей CTRL + SUPER + S приходит через IPC в shell.qml
     signal toggleRequested
 
@@ -80,12 +86,24 @@ Singleton {
         id: store
 
         path: root.statePath
+
+        // Читаем СИНХРОННО: иначе панель успевает родиться со значениями по
+        // умолчанию, слой коммитит островные отступы, а приехавший следом
+        // «panel» меняет только то, что рисует QML. Получается остров с
+        // прямыми углами — отступы уже не переставить.
+        blockLoading: true
+
         watchChanges: true
         onFileChanged: store.reload()
 
+        onLoaded: root.loaded = true
+
         // файла может не быть — это нормально, тогда остаются значения по
         // умолчанию, и они же сразу записываются
-        onLoadFailed: store.writeAdapter()
+        onLoadFailed: {
+            store.writeAdapter();
+            root.loaded = true;
+        }
 
         adapter: JsonAdapter {
             property string barPosition: "top"

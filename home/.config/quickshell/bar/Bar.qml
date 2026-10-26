@@ -76,7 +76,9 @@ PanelWindow {
         ? bar.hyprMonitor.activeWorkspace.hasFullscreen
         : false
 
-    visible: !bar.fullscreenHere
+    // Settings.loaded: панель не показывается, пока неизвестны положение и
+    // режим — иначе слой закоммитит отступы по умолчанию (см. Settings.qml)
+    visible: Settings.loaded && !bar.fullscreenHere
 
     // история буфера обмена: своим слоем, открывается с SUPER + V
     ClipboardMenu {

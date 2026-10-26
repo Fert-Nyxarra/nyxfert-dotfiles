@@ -2,8 +2,8 @@
 -- генерирует matugen -> ~/.config/hypr/colors.lua
 return {
   -- активное окно: один цвет, без градиента
-  active_border = "rgba(ff629aff)",
+  active_border = "rgba(ff6d7cff)",
 
   -- неактивное окно: приглушённая полупрозрачная рамка
-  inactive_border = "rgba(4a343aaa)",
+  inactive_border = "rgba(503234aa)",
 }
