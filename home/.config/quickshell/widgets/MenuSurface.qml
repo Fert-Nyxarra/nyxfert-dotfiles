@@ -28,6 +28,15 @@ Item {
     property bool flushLeft: false
     property bool flushRight: false
 
+    // Приклеено к кромке панели: обратные скругления на стыке и выезд
+    // из-под неё. Так ведёт себя меню у ВЕРХНЕЙ панели — она для этого и
+    // рисовалась. У остальных трёх кромок меню — обычная карточка, которая
+    // выезжает со стороны панели: стык там пришлось бы рисовать заново, в
+    // зеркальном и повёрнутом виде.
+    property bool seamless: true
+    // откуда выезжает карточка, когда seamless выключен: "bottom" | "left" | "right"
+    property string slideFrom: "bottom"
+
     default property alias content: body.data
     property alias header: headerColumn.data
     property alias footer: footerColumn.data
@@ -93,13 +102,15 @@ Item {
     // Насколько меню выехало: 0 — спрятано под панелью, 1 — на месте.
     // По этому же числу панель гасит свой угол, поэтому угол и меню идут
     // синхронно: ни «угол уже острый, а меню ещё нет», ни наоборот.
-    readonly property real revealProgress: root.animatedHeight > 0
+    readonly property real revealProgress: !root.seamless
+        ? (root.opened ? 1 : 0)
+        : root.animatedHeight > 0
         ? Math.max(0, Math.min(1,
             (surface.y + root.animatedHeight + Theme.popupRadius) / root.animatedHeight))
         : 0
 
     // окно шире самого меню на поля под обратные скругления
-    implicitWidth: root.menuWidth + root.notch * 2
+    implicitWidth: root.menuWidth + (root.seamless ? root.notch * 2 : 0)
     implicitHeight: Math.max(1, Math.round(root.animatedHeight))
 
     component NotchCorner: Item {
@@ -161,21 +172,29 @@ Item {
 
         // прямоугольник поднят на радиус вверх: верхние скругления и верхняя
         // рамка остаются за границей окна и не рисуются
-        x: root.notch
         width: root.menuWidth
-        height: root.animatedHeight + Theme.popupRadius
+        height: root.seamless ? root.animatedHeight + Theme.popupRadius : root.animatedHeight
 
-        // закрытое меню целиком стоит выше окна — его просто не видно
-        y: root.opened
-            ? -Theme.popupRadius
-            : -(root.animatedHeight + Theme.popupRadius)
+        // Приклеенное меню стоит выше окна на радиус: его верхние скругления
+        // и верхняя рамка остаются за границей и не рисуются. Карточка же
+        // целиком внутри окна и уезжает за ту грань, со стороны которой
+        // лежит панель.
+        x: root.seamless ? root.notch
+            : root.opened ? 0
+            : root.slideFrom === "left" ? -root.menuWidth
+            : root.slideFrom === "right" ? root.menuWidth
+            : 0
+
+        y: root.seamless
+            ? (root.opened ? -Theme.popupRadius : -(root.animatedHeight + Theme.popupRadius))
+            : (root.opened ? 0 : root.slideFrom === "bottom" ? root.animatedHeight : 0)
 
         radius: Theme.popupRadius
-        // Верхние углы прямые и сами по себе: обычно их всё равно срезает
-        // обрезка выше, но если она почему-то не сработает, меню не станет
+        // У приклеенного меню верхние углы прямые: обычно их всё равно
+        // срезает обрезка выше, но если она не сработает, меню не станет
         // вдруг отдельной карточкой со скруглённой макушкой.
-        topLeftRadius: 0
-        topRightRadius: 0
+        topLeftRadius: root.seamless ? 0 : radius
+        topRightRadius: root.seamless ? 0 : radius
         color: Theme.panelColor
         border.width: 1
         border.color: Theme.panelBorder
@@ -192,11 +211,23 @@ Item {
             }
         }
 
+        // карточка у боковой панели уезжает вбок, сигнал нужен и оттуда
+        Behavior on x {
+            enabled: !root.seamless
+            NumberAnimation {
+                duration: root.slideDuration
+                easing.type: Easing.OutQuint
+                onRunningChanged: if (!running && !root.opened) root.settled()
+            }
+        }
+
         Item {
             id: content
 
             x: 0
-            y: Theme.popupRadius
+            // у приклеенного меню верхний радиус спрятан за кромкой окна,
+            // поэтому содержимое начинается ниже; у карточки — с самого верха
+            y: root.seamless ? Theme.popupRadius : 0
             width: parent.width
             height: root.animatedHeight
 
@@ -339,6 +370,7 @@ Item {
     NotchCorner {
         x: 0
         y: 0
+        visible: root.seamless
         opacity: root.flushLeft ? 0 : 1
     }
 
@@ -346,6 +378,7 @@ Item {
     NotchCorner {
         x: root.notch + root.menuWidth - 1
         y: 0
+        visible: root.seamless
         opacity: root.flushRight ? 0 : 1
         transform: Scale { xScale: -1; origin.x: (root.notch + 1) / 2 }
     }

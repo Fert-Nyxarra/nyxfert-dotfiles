@@ -52,6 +52,6 @@ BarItem {
         text: (NotificationService.dnd
                 ? "󰂛 "
                 : root.count > 0 ? "󱅫 " : "󰂚 ")
-            + (root.count > 0 ? root.count : "")
+            + (root.count > 0 && !Theme.barVertical ? root.count : "")
     }
 }

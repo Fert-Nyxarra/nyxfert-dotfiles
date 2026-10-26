@@ -57,9 +57,19 @@ BarItem {
 
     BarText {
         color: Colors.text
-        font.pixelSize: Theme.fontSize + 1
-        text: root.showDate
-            ? "󰃭 " + clock.date.toLocaleDateString(Qt.locale("ru_RU"), "dddd, d MMMM yyyy")
-            : "󰥔 " + Qt.formatDateTime(clock.date, "HH:mm")
+        horizontalAlignment: Text.AlignHCenter
+        // У боковой панели 38 пикселей ширины: «󰥔 14:20» туда не влезает,
+        // поэтому время идёт в две строки и без значка, а дата по клику
+        // показывается покороче.
+        font.pixelSize: Theme.barVertical ? Theme.fontSize - 1 : Theme.fontSize + 1
+        lineHeight: Theme.barVertical ? 0.95 : 1
+
+        text: Theme.barVertical
+            ? (root.showDate
+                ? Qt.formatDateTime(clock.date, "dd\nMM")
+                : Qt.formatDateTime(clock.date, "HH\nmm"))
+            : (root.showDate
+                ? "󰃭 " + clock.date.toLocaleDateString(Qt.locale("ru_RU"), "dddd, d MMMM yyyy")
+                : "󰥔 " + Qt.formatDateTime(clock.date, "HH:mm"))
     }
 }

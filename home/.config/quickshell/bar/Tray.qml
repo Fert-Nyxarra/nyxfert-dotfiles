@@ -26,7 +26,6 @@ BarItem {
 
             required property var modelData
 
-            anchors.verticalCenter: parent.verticalCenter
             implicitWidth: 18
             implicitHeight: 18
             cursorShape: Qt.PointingHandCursor

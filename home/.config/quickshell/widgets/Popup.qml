@@ -23,7 +23,7 @@ PopupWindow {
     property int maximumWidth: 460
     // длинные меню (например, у Steam) не должны уезжать за край экрана
     property int maximumHeight: root.screen
-        ? root.screen.height - Theme.barHeight - Theme.gap * 4
+        ? root.screen.height - Theme.barThickness - Theme.barMargin * 4
         : 640
     property bool opened: false
     // перехватывать ли ввод: меню по наведению этого не делают
@@ -72,17 +72,33 @@ PopupWindow {
         onTransformChanged: root.geometryRevision++
     }
 
-    // Меню центрируется под своим модулем, но не должно вылезать за остров.
+    // Меню центрируется на своём модуле, но не должно вылезать за экран.
     // Компоновщик умеет двигать окно только по краю ЭКРАНА, поэтому сдвиг
-    // считаем сами и передаём через anchor.rect.x.
+    // считаем сами и передаём через anchor.rect.
     readonly property var placement: {
         const item = root.anchorItem;
-        const barWidth = item.Window.width;
         const inset = root.edgeInset;
 
         root.opened;
         root.geometryRevision;
 
+        if (Theme.barVertical) {
+            // боковая панель: двигаем меню по вертикали
+            const screenHeight = item.Window.height;
+            const menuHeight = Math.max(1, root.implicitHeight);
+            const middle = item.mapToItem(null, 0, item.height / 2).y;
+            const halfHeight = menuHeight / 2;
+            const bottomLimit = screenHeight - halfHeight - Theme.barMargin;
+            const topLimit = halfHeight + Theme.barMargin;
+
+            const wanted = bottomLimit < topLimit
+                ? screenHeight / 2
+                : Math.max(topLimit, Math.min(middle, bottomLimit));
+
+            return { shift: wanted - middle, flushLeft: false, flushRight: false };
+        }
+
+        const barWidth = item.Window.width;
         const center = item.mapToItem(null, item.width / 2, 0).x;
         const half = root.menuWidth / 2;
         const limit = barWidth - root.menuWidth - inset;
@@ -98,16 +114,38 @@ PopupWindow {
         };
     }
 
-    // низ панели в координатах элемента: модули отцентрованы по вертикали
+    // Насколько модуль утоплен в толщину панели: модули отцентрованы, а
+    // меню должно отсчитываться от кромки острова, а не от края модуля.
+    readonly property real barInset: Theme.barVertical
+        ? (Theme.barThickness - root.anchorItem.width) / 2
+        : (Theme.barThickness - root.anchorItem.height) / 2
+
     anchor.item: root.anchorItem
-    anchor.rect.x: root.placement.shift
-    anchor.rect.y: root.anchorItem.height
-        + (Theme.barHeight - root.anchorItem.height) / 2
-        - Theme.popupOverlap
-    anchor.rect.width: root.anchorItem.width
+
+    // У верхней панели меню висит под ней и заезжает под кромку на
+    // popupOverlap — шва не видно. У остальных трёх это обычная карточка с
+    // зазором popupGap.
+    anchor.rect.x: Math.round(Theme.barVertical
+        ? (Theme.barPosition === "left"
+            ? root.anchorItem.width + root.barInset + Theme.popupGap
+            : -root.barInset - Theme.popupGap)
+        : root.placement.shift)
+
+    anchor.rect.y: Math.round(Theme.barVertical
+        ? root.anchorItem.height / 2 + root.placement.shift
+        : (Theme.barFlipped
+            ? -root.barInset + Theme.popupOverlap
+            : root.anchorItem.height + root.barInset - Theme.popupOverlap))
+
+    anchor.rect.width: Theme.barVertical ? 1 : root.anchorItem.width
     anchor.rect.height: 1
-    anchor.edges: Edges.Bottom
-    anchor.gravity: Edges.Bottom
+
+    anchor.edges: Theme.barVertical
+        ? (Theme.barPosition === "left" ? Edges.Right : Edges.Left)
+        : (Theme.barFlipped ? Edges.Top : Edges.Bottom)
+
+    anchor.gravity: root.anchor.edges
+
     // Поправки компоновщика выключены: границы держит расчёт выше, а SlideX
     // вдобавок сдвигал окно на пару пикселей.
     anchor.adjustment: PopupAdjustment.None
@@ -169,6 +207,13 @@ PopupWindow {
         opened: root.opened
         menuWidth: root.menuWidth
         maximumHeight: root.maximumHeight
+
+        // стык с панелью рисуется только у верхней кромки — см. MenuSurface
+        seamless: Theme.barPosition === "top"
+        slideFrom: Theme.barPosition === "left" ? "left"
+            : Theme.barPosition === "right" ? "right"
+            : "bottom"
+
         flushLeft: root.placement.flushLeft
         flushRight: root.placement.flushRight
 

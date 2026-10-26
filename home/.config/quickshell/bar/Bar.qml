@@ -1,8 +1,13 @@
 // ~/.config/quickshell/bar/Bar.qml
-// Сама панель: слой wlr-layer-shell поверх окон, прижата к верху экрана.
+// Сама панель: слой wlr-layer-shell поверх окон, прижатый к одной из кромок
+// экрана. Кромка и режим выбираются в настройках (CTRL + SUPER + S).
 //
-// Все модули лежат внутри ОДНОГО острова на всю ширину экрана: фон и рамку
+// Все модули лежат внутри ОДНОГО острова во всю длину кромки: фон и рамку
 // рисует surface, а сами модули плоские и разделены волосяными линиями.
+//
+// Горизонтальная и боковая раскладки — это одни и те же модули в Grid,
+// которому меняют направление. Делать два набора нельзя: каждый лаунчер,
+// трей и центр уведомлений существовал бы дважды, со своим состоянием.
 
 import QtQuick
 import Quickshell
@@ -34,19 +39,33 @@ PanelWindow {
         ? WlrKeyboardFocus.OnDemand
         : WlrKeyboardFocus.None
 
+    readonly property bool vertical: Theme.barVertical
+
+    // панель держится за свою кромку и растягивается вдоль неё
     anchors {
-        top: true
-        left: true
-        right: true
+        top: Theme.barPosition !== "bottom"
+        bottom: Theme.barPosition !== "top"
+        left: Theme.barPosition !== "right"
+        right: Theme.barPosition !== "left"
     }
 
+    // от своей кромки отступ barMargin, вдоль кромки — barSideMargin;
+    // в режиме «панель» оба нулевые, и остров превращается в полосу впритык
     margins {
-        top: Theme.gap
-        left: Theme.sideMargin
-        right: Theme.sideMargin
+        top: bar.vertical ? Theme.barSideMargin
+            : Theme.barPosition === "top" ? Theme.barMargin : 0
+        bottom: bar.vertical ? Theme.barSideMargin
+            : Theme.barPosition === "bottom" ? Theme.barMargin : 0
+        left: bar.vertical
+            ? (Theme.barPosition === "left" ? Theme.barMargin : 0)
+            : Theme.barSideMargin
+        right: bar.vertical
+            ? (Theme.barPosition === "right" ? Theme.barMargin : 0)
+            : Theme.barSideMargin
     }
 
-    implicitHeight: Theme.barHeight
+    implicitHeight: bar.vertical ? 0 : Theme.barThickness
+    implicitWidth: bar.vertical ? Theme.barThickness : 0
     color: "transparent"
 
     // Полноэкранному окну панель мешает: слой Top рисуется поверх него.
@@ -105,11 +124,26 @@ PanelWindow {
             onClicked: Menus.closeCurrent()
         }
 
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: Theme.barPadding
-            anchors.verticalCenter: parent.verticalCenter
+        // Левая группа у горизонтальной панели, верхняя — у боковой
+        Grid {
+            id: startGroup
+
+            flow: bar.vertical ? Grid.TopToBottom : Grid.LeftToRight
+            rows: bar.vertical ? 99 : 1
+            columns: bar.vertical ? 1 : 99
             spacing: Theme.groupGap
+
+            // Grid кладёт детей в левый верхний угол ячейки; без этого
+            // разделители и мелкие значки не стояли бы по центру полосы
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
+
+            // Координаты явные, без anchors: переключать привязки биндингами
+            // (`bar.vertical ? parent.top : undefined`) не выходит — QML
+            // оставляет обе и раскладка съезжает, группы наползают друг на
+            // друга.
+            x: bar.vertical ? (parent.width - width) / 2 : Theme.barPadding
+            y: bar.vertical ? Theme.barPadding : (parent.height - height) / 2
 
             Launcher { id: launcher; barScreen: bar.modelData }
             Separator {}
@@ -119,15 +153,31 @@ PanelWindow {
         }
 
         Clock {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
         }
 
-        Row {
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.barPadding
-            anchors.verticalCenter: parent.verticalCenter
+        // Правая группа у горизонтальной панели, нижняя — у боковой
+        Grid {
+            id: endGroup
+
+            flow: bar.vertical ? Grid.TopToBottom : Grid.LeftToRight
+            rows: bar.vertical ? 99 : 1
+            columns: bar.vertical ? 1 : 99
             spacing: Theme.groupGap
+
+            // Grid кладёт детей в левый верхний угол ячейки; без этого
+            // разделители и мелкие значки не стояли бы по центру полосы
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
+
+            x: bar.vertical
+                ? (parent.width - width) / 2
+                : parent.width - width - Theme.barPadding
+
+            y: bar.vertical
+                ? parent.height - height - Theme.barPadding
+                : (parent.height - height) / 2
 
             Tray { id: tray }
             Separator { visible: tray.visible }

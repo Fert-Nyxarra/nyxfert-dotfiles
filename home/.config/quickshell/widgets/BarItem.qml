@@ -28,8 +28,15 @@ Item {
     signal middleClicked
     signal wheel(int delta)
 
-    implicitWidth: inner.implicitWidth + horizontalPadding * 2
-    implicitHeight: Theme.itemHeight
+    // У боковой панели модуль вытянут поперёк: отступы ложатся по вертикали,
+    // а поперечный размер фиксирован толщиной элемента.
+    implicitWidth: Theme.barVertical
+        ? Theme.itemHeight
+        : inner.implicitWidth + horizontalPadding * 2
+
+    implicitHeight: Theme.barVertical
+        ? inner.implicitHeight + horizontalPadding * 2
+        : Theme.itemHeight
 
     data: [
         Rectangle {
@@ -67,10 +74,21 @@ Item {
             onWheel: event => root.wheel(event.angleDelta.y)
         },
 
-        Row {
+        // Grid, а не Row: у боковой панели содержимое модуля встаёт
+        // столбиком, и направление должно меняться без второго набора
+        // элементов.
+        Grid {
             id: inner
+
             anchors.centerIn: parent
             spacing: Theme.gap
+
+            flow: Theme.barVertical ? Grid.TopToBottom : Grid.LeftToRight
+            rows: Theme.barVertical ? 99 : 1
+            columns: Theme.barVertical ? 1 : 99
+
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
         }
     ]
 }

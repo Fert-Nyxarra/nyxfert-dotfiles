@@ -42,7 +42,8 @@ BarItem {
     readonly property bool playing: root.player !== null && root.player.isPlaying
 
     // показываемся, когда что-то играет или хотя бы известен трек
-    visible: root.player !== null
+    // У боковой панели названию песни негде поместиться — модуль прячем
+    visible: root.player !== null && !Theme.barVertical
         && (root.playing || root.player.trackTitle !== "" || root.player.trackArtist !== "")
 
     horizontalPadding: 10
@@ -70,7 +71,6 @@ BarItem {
     }
 
     Equalizer {
-        anchors.verticalCenter: parent.verticalCenter
         playing: root.playing
         barColor: root.playing ? Colors.primary : Colors.outline
     }

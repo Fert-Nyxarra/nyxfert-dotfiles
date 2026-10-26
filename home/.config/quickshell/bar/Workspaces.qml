@@ -56,19 +56,22 @@ BarItem {
             readonly property bool occupied: workspace !== null
             readonly property bool urgent: workspace ? workspace.urgent : false
 
-            anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: dot.implicitWidth
-            implicitHeight: Theme.itemHeight
+            implicitWidth: Theme.barVertical ? Theme.itemHeight : dot.implicitWidth
+            implicitHeight: Theme.barVertical ? dot.implicitLength : Theme.itemHeight
 
             Rectangle {
                 id: dot
 
                 anchors.centerIn: parent
 
-                // активный стол — пилюля, остальные — точки; цвет сплошной,
-                // без градиента
-                implicitWidth: slot.focused ? 28 : 12
-                implicitHeight: 12
+                // Активный стол — пилюля, остальные — точки; цвет сплошной,
+                // без градиента. Пилюля вытягивается ВДОЛЬ панели, поэтому у
+                // боковой она вертикальная.
+                // не readonly: на readonly нельзя повесить Behavior
+                property int implicitLength: slot.focused ? 28 : 12
+
+                implicitWidth: Theme.barVertical ? 12 : dot.implicitLength
+                implicitHeight: Theme.barVertical ? dot.implicitLength : 12
                 width: implicitWidth
                 height: implicitHeight
                 radius: height / 2
@@ -79,7 +82,7 @@ BarItem {
                      : slot.occupied ? Colors.subtext
                      : Theme.alpha(Colors.outline, 0.35)
 
-                Behavior on implicitWidth {
+                Behavior on implicitLength {
                     NumberAnimation {
                         duration: Theme.animDuration
                         easing.type: Easing.OutBack

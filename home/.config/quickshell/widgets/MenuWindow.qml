@@ -122,16 +122,36 @@ PanelWindow {
     MenuSurface {
         id: surface
 
-        // встаём ровно туда же, куда встало бы всплывающее меню: под остров,
-        // заезжая под него на popupOverlap
-        x: Theme.sideMargin + root.edgeInset - surface.notch
-        y: Theme.gap + Theme.barHeight - Theme.popupOverlap
+        // Встаём туда же, куда встало бы всплывающее меню: у своей кромки,
+        // со стороны панели. У верхней — заезжая под неё на popupOverlap,
+        // у остальных — с зазором popupGap.
+        x: Theme.barVertical
+            ? (Theme.barPosition === "left"
+                ? Theme.barMargin + Theme.barThickness + Theme.popupGap
+                : root.width - Theme.barMargin - Theme.barThickness
+                    - Theme.popupGap - surface.width)
+            : Theme.barSideMargin + root.edgeInset - (surface.seamless ? surface.notch : 0)
+
+        y: Theme.barVertical
+            ? Math.max(Theme.barMargin,
+                Math.min(root.height - surface.height - Theme.barMargin,
+                         Theme.barSideMargin + root.edgeInset))
+            : (Theme.barPosition === "bottom"
+                ? root.height - Theme.barMargin - Theme.barThickness
+                    - Theme.popupGap - surface.height
+                : Theme.barMargin + Theme.barThickness - Theme.popupOverlap)
         width: surface.implicitWidth
         height: surface.implicitHeight
 
         opened: root.opened
         menuWidth: root.menuWidth
         maximumHeight: root.maximumHeight
+
+        seamless: Theme.barPosition === "top"
+        slideFrom: Theme.barPosition === "left" ? "left"
+            : Theme.barPosition === "right" ? "right"
+            : "bottom"
+
         flushLeft: root.edgeInset === 0
         flushRight: false
 

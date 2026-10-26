@@ -29,6 +29,11 @@ ShellRoot {
         function clipboard(): void {
             ClipboardService.toggle();
         }
+
+        // Ctrl + Super + S: настройки оболочки
+        function settings(): void {
+            Settings.toggle();
+        }
     }
 
     Variants {
@@ -39,4 +44,7 @@ ShellRoot {
 
     // выбор обоев — один слой на весь shell, открывается с Super + W
     WallpaperPicker {}
+
+    // настройки оболочки — Ctrl + Super + S
+    SettingsWindow {}
 }

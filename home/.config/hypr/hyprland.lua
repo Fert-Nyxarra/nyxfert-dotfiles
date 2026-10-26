@@ -262,6 +262,7 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())
 -- Выбор обоев: слайды, палитра matugen и запись в автозапуск
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("qs ipc call launcher wallpaper"))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"))
+hl.bind("CTRL + " .. mainMod .. " + S", hl.dsp.exec_cmd("qs ipc call launcher settings"))
 
 hl.bind(mainMod .. " + SUPER_L", hl.dsp.exec_cmd("qs ipc call launcher toggle"), { release = true })
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
