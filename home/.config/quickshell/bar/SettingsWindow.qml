@@ -104,7 +104,7 @@ PanelWindow {
         anchors.centerIn: parent
         width: 720
         // высоты хватает на самую длинную вкладку — «Окна»
-        height: 580
+        height: 520
         radius: Theme.popupRadius
         color: Theme.panelColor
         border.width: 1
@@ -241,21 +241,11 @@ PanelWindow {
                 color: Colors.text
             }
 
-            Text {
-                id: pageHint
-
-                y: pageTitle.height + 4
-                text: "Изменения применяются сразу"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize - 2
-                color: Colors.subtext
-            }
-
             // положение
             Text {
                 id: positionLabel
 
-                y: 64
+                y: 44
                 text: "Положение"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
@@ -478,21 +468,11 @@ PanelWindow {
                 color: Colors.text
             }
 
-            Text {
-                id: windowsHint
-
-                y: windowsTitle.height + 4
-                text: "Настройки Hyprland, применяются сразу"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize - 2
-                color: Colors.subtext
-            }
-
             // раскладка окон с живым предпросмотром
             Text {
                 id: layoutLabel
 
-                y: 56
+                y: 40
                 text: "Раскладка окон"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
@@ -781,15 +761,6 @@ PanelWindow {
                 }
             }
 
-            Text {
-                y: parent.height - height - 10
-                width: parent.width - 20
-                wrapMode: Text.WordWrap
-                text: "Значения держит панель и возвращает их Hyprland после каждой его перезагрузки — hyprland.lua при этом не меняется."
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize - 3
-                color: Colors.outline
-            }
         }
     }
 }
