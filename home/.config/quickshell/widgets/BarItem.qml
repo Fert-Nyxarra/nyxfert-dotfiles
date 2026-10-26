@@ -84,8 +84,9 @@ Item {
             spacing: Theme.gap
 
             flow: Theme.barVertical ? Grid.TopToBottom : Grid.LeftToRight
-            rows: Theme.barVertical ? 99 : 1
-            columns: Theme.barVertical ? 1 : 99
+            // -1 значит «считай сам», см. комментарий в Bar.qml
+            rows: Theme.barVertical ? -1 : 1
+            columns: Theme.barVertical ? 1 : -1
 
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter

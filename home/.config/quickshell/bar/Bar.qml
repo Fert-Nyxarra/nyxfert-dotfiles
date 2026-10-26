@@ -132,8 +132,11 @@ PanelWindow {
             id: startGroup
 
             flow: bar.vertical ? Grid.TopToBottom : Grid.LeftToRight
-            rows: bar.vertical ? 99 : 1
-            columns: bar.vertical ? 1 : 99
+            // -1 значит «считай сам»: задавать ОБА числа нельзя, Grid
+            // принимает их за жёсткую сетку и ругается, что элементов больше,
+            // чем ячеек
+            rows: bar.vertical ? -1 : 1
+            columns: bar.vertical ? 1 : -1
             spacing: Theme.groupGap
 
             // Grid кладёт детей в левый верхний угол ячейки; без этого
@@ -165,8 +168,11 @@ PanelWindow {
             id: endGroup
 
             flow: bar.vertical ? Grid.TopToBottom : Grid.LeftToRight
-            rows: bar.vertical ? 99 : 1
-            columns: bar.vertical ? 1 : 99
+            // -1 значит «считай сам»: задавать ОБА числа нельзя, Grid
+            // принимает их за жёсткую сетку и ругается, что элементов больше,
+            // чем ячеек
+            rows: bar.vertical ? -1 : 1
+            columns: bar.vertical ? 1 : -1
             spacing: Theme.groupGap
 
             // Grid кладёт детей в левый верхний угол ячейки; без этого

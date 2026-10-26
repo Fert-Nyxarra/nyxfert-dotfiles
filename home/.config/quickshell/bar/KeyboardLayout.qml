@@ -14,6 +14,10 @@ BarItem {
 
     interactive: true
 
+    // горизонтально значок и буквы стоят почти вплотную, как было одной
+    // строкой; столбиком зазор не нужен вовсе
+    spacing: Theme.barVertical ? 0 : 4
+
     function shortName(full: string): string {
         const name = full.toLowerCase();
         if (name.includes("russian")) return "RU";
@@ -59,8 +63,17 @@ BarItem {
         }
     }
 
+    // Значок и буквы — два отдельных элемента, а не одна строка: у боковой
+    // панели Grid внутри BarItem ставит их столбиком, значок сверху, буквы
+    // под ним. У горизонтальной они стоят в ряд, как и раньше.
     BarText {
         color: Colors.primary
-        text: "󰌌 " + root.layout
+        text: "󰌌"
+    }
+
+    BarText {
+        color: Colors.primary
+        font.pixelSize: Theme.barVertical ? Theme.fontSize - 2 : Theme.fontSize
+        text: root.layout
     }
 }
