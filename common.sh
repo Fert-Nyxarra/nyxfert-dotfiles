@@ -8,23 +8,23 @@ run()  { if [ "${DRY:-0}" = 1 ]; then printf '   \033[2m%s\033[0m\n' "$*"; else 
 backup() {
     local target="$1"
     [ -e "$target" ] || return 0
-    say "сохраняю прежний $target -> $target.bak-$STAMP"
+    say "keeping the old $target as $target.bak-$STAMP"
     run mv "$target" "$target.bak-$STAMP"
 }
 
 check_not_root() {
-    [ "$(id -u)" != 0 ] || die "запускай от своего пользователя, а не от root — скрипт сам позовёт sudo"
+    [ "$(id -u)" != 0 ] || die "run as your own user, not root — the script calls sudo when it needs to"
 }
 
 install_home_files() {
     SRC_USER="$(cat "$KIT/MANIFEST_USER" 2>/dev/null || echo nyxfert)"
     DST_USER="$(id -un)"
 
-    say "пользователь: $SRC_USER (откуда) -> $DST_USER (сюда)"
+    say "user: $SRC_USER (from) -> $DST_USER (to)"
 
     run mkdir -p "$HOME/.config" "$HOME/bin" "$HOME/.local/state/quickshell"
 
-    say "раскладываю конфиги"
+    say "installing configs"
     for dir in quickshell hypr matugen kitty fastfetch nixos-setup; do
         [ -d "$KIT/home/.config/$dir" ] || continue
         backup "$HOME/.config/$dir"
@@ -44,16 +44,16 @@ install_home_files() {
     fi
 
     if [ "${WALLPAPERS:-1}" = 1 ] && [ -d "$KIT/home/Wallpapers" ]; then
-        say "копирую обои в ~/Wallpapers"
+        say "copying wallpapers to ~/Wallpapers"
         run mkdir -p "$HOME/Wallpapers"
         run cp -r "$KIT"/home/Wallpapers/. "$HOME/Wallpapers/"
     else
         run mkdir -p "$HOME/Wallpapers"
-        warn "обои не копировались — положи что-нибудь в ~/Wallpapers, иначе селектор будет пуст"
+        warn "no wallpapers copied — put some in ~/Wallpapers or the picker stays empty"
     fi
 
     if [ "$SRC_USER" != "$DST_USER" ] && [ "${DRY:-0}" = 0 ]; then
-        say "переписываю пути /home/$SRC_USER -> $HOME"
+        say "rewriting paths /home/$SRC_USER -> $HOME"
         grep -rl "/home/$SRC_USER" "$HOME/.config/quickshell" "$HOME/.config/hypr" \
             "$HOME/.config/matugen" "$HOME/bin" 2>/dev/null \
             | while read -r f; do
@@ -67,7 +67,7 @@ install_home_files() {
             first="$(find "$HOME/Wallpapers" -maxdepth 1 -type f \
                 \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) | sort | head -1)"
             if [ -n "$first" ]; then
-                warn "обоев $want нет, ставлю $first"
+                warn "$want is missing, using $first instead"
                 sed -i "s|hl.exec_cmd(\"swaybg -i [^\"]*\")|hl.exec_cmd(\"swaybg -i $first\")|" \
                     "$HOME/.config/hypr/hyprland.lua"
             fi
@@ -78,18 +78,19 @@ install_home_files() {
 final_notes() {
     cat <<EOF
 
-Готово. Дальше:
+Done. Next steps:
 
-  1. Выйти из сессии и войти в Hyprland (SDDM предложит его в списке).
-  2. Super + W — выбрать обои: это задаёт и палитру, и строку автозапуска.
-  3. Если значки в панели — пустые прямоугольники, шрифт не подхватился:
-     fc-list | grep -i jetbrains  и перелогиниться.
+  1. Log out and log into Hyprland (SDDM lists it).
+  2. Super + W picks a wallpaper: that sets both the palette and the
+     autostart line.
+  3. If the bar shows empty boxes instead of icons, the font did not load:
+     check fc-list | grep -i jetbrains and log in again.
 
-Проверить панель: qs log   (ошибки QML видны там же)
-Горячие клавиши: Super — лаунчер, Super+W — обои, Super+V — буфер обмена,
-Ctrl+Super+S — настройки, Super+F — полный экран, Super+M — выйти из сессии.
+Check the bar with: qs log   (QML errors show up there)
+Keys: Super — launcher, Super+W — wallpapers, Super+V — clipboard,
+Ctrl+Super+S — settings, Super+F — fullscreen, Super+M — log out.
 
-Прикладной софт (браузер, мессенджеры, плеер) набор НЕ ставит — только то,
-без чего не работает сама оболочка.
+Applications (browser, messengers, media players) are NOT installed — only
+what the shell itself needs.
 EOF
 }

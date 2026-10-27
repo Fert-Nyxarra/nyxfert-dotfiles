@@ -15,18 +15,18 @@ while [ $# -gt 0 ]; do
         --no-wallpapers) WALLPAPERS=0 ;;
         -h|--help)
             cat <<'USAGE'
-install-arch.sh — разворачивает окружение на Arch Linux.
+install-arch.sh — sets up the shell on Arch Linux.
 
-  ./install-arch.sh                 поставить пакеты и разложить конфиги
-  ./install-arch.sh --dry-run       только показать, что будет сделано
-  ./install-arch.sh --no-packages   ничего не ставить, только конфиги
-  ./install-arch.sh --no-wallpapers не копировать обои
+  ./install-arch.sh                 install packages and configs
+  ./install-arch.sh --dry-run       only show what would happen
+  ./install-arch.sh --no-packages   configs only, install nothing
+  ./install-arch.sh --no-wallpapers skip wallpapers
 
-Для NixOS есть отдельный install.sh в том же наборе.
+For NixOS use install.sh from the same kit.
 USAGE
             exit 0
             ;;
-        *) echo "неизвестный ключ: $1" >&2; exit 2 ;;
+        *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
     shift
 done
@@ -34,9 +34,9 @@ done
 . "$KIT/common.sh"
 
 check_not_root
-command -v pacman >/dev/null || die "это не Arch — для NixOS есть install.sh"
+command -v pacman >/dev/null || die "this is not Arch — use install.sh for NixOS"
 
-[ "$DRY" = 1 ] && warn "холостой прогон: ничего не меняется"
+[ "$DRY" = 1 ] && warn "dry run: nothing is changed"
 
 REPO_PACKAGES=(
     hyprland
@@ -75,16 +75,16 @@ aur_helper() {
 }
 
 install_packages() {
-    say "ставлю пакеты из репозиториев (${#REPO_PACKAGES[@]} шт.)"
+    say "installing ${#REPO_PACKAGES[@]} packages from the repositories"
     run sudo pacman -S --needed --noconfirm "${REPO_PACKAGES[@]}"
 
     local helper
     helper="$(aur_helper || true)"
 
     if [ -z "$helper" ]; then
-        warn "не найден помощник AUR (paru или yay)."
-        warn "quickshell, matugen и hyprshot оттуда — без них панель не запустится."
-        warn "Поставить paru:"
+        warn "no AUR helper found (paru or yay)."
+        warn "quickshell, matugen and hyprshot live there — the bar will not start without them."
+        warn "Install paru with:"
         cat <<'SNIP'
 
     sudo pacman -S --needed base-devel git
@@ -92,16 +92,16 @@ install_packages() {
     cd /tmp/paru && makepkg -si
 
 SNIP
-        warn "после этого запусти скрипт ещё раз"
+        warn "then run this script again"
         return
     fi
 
-    say "ставлю из AUR через $helper (${#AUR_PACKAGES[@]} шт.)"
+    say "installing ${#AUR_PACKAGES[@]} packages from the AUR via $helper"
     run "$helper" -S --needed --noconfirm "${AUR_PACKAGES[@]}"
 }
 
 enable_services() {
-    say "включаю системные службы"
+    say "enabling system services"
 
     for unit in NetworkManager sddm power-profiles-daemon; do
         run sudo systemctl enable "$unit"
@@ -112,7 +112,7 @@ if [ "$PACKAGES" = 1 ]; then
     install_packages
     enable_services
 else
-    say "ключ --no-packages: пакеты не трогаю"
+    say "--no-packages: leaving packages alone"
 fi
 
 install_home_files
@@ -121,14 +121,14 @@ final_notes
 
 cat <<'EOF'
 
-Отличия от NixOS, про которые стоит знать:
+Differences from NixOS worth knowing:
 
-  * matugen ставится из AUR (matugen-bin). Нужна версия 4.2+: в более
-    старых нет ключа --prefer, и режим «авто» в выборе обоев падает на
-    картинках с несколькими цветами. Панель это переживёт — она сама
-    спрашивает версию, — но «авто» работать не будет.
-  * NVIDIA скрипт не настраивает: на ноутбуке это обычно PRIME, и правила
-    у каждой машины свои.
-  * Раскладка us,ru с переключением по Win+Space задаётся в hyprland.lua,
-    отдельной настройки X11 не нужно.
+  * matugen comes from the AUR (matugen-bin). Version 4.2+ is required:
+    older builds lack --prefer, so automatic wallpaper colors fail on
+    images with several candidate colors. The bar survives that — it checks
+    the version itself — but automatic colors will not work.
+  * NVIDIA is not configured: on a laptop that usually means PRIME, and the
+    rules differ per machine.
+  * The us,ru layout with Win+Space switching is set in hyprland.lua, no
+    separate X11 configuration is needed.
 EOF
