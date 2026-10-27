@@ -715,62 +715,71 @@ matugen не разобрал картинку, остаётся прошлое 
 
 ## Перенос на другую машину
 
-Готовый набор лежит в `~/.config/nixos-setup`, собирается скриптом
-`~/bin/export-setup`:
+Набор лежит в `~/.config/nixos-setup`, собирается скриптом `~/bin/export-setup`:
 
 ```
 export-setup                  # ~/nixos-setup-<дата>.tar.gz, вместе с обоями
 export-setup --no-wallpapers  # без обоев, ~150 КБ
 ```
 
+В архиве два установщика и общая часть:
+
+```
+install.sh        NixOS: модуль desktop.nix + конфиги
+install-arch.sh   Arch: pacman + AUR + конфиги
+common.sh         раскладывание конфигов, одинаковое для обеих систем
+nix/desktop.nix   модуль NixOS
+```
+
 На чистой машине:
 
 ```
 tar xzf nixos-setup-<дата>.tar.gz
-cd nixos-setup && ./install.sh
+cd nixos-setup
+./install.sh        # NixOS
+./install-arch.sh   # Arch
 ```
 
-`install.sh` раскладывает конфиги (прежние сохраняет рядом с меткой
-времени), переписывает пути под нового пользователя, ставит
-`/etc/nixos/desktop.nix` и вписывает его в `imports`, после чего предлагает
-пересобрать систему. Ключи: `--dry-run` (показать и ничего не делать),
-`--home-only` (не трогать `/etc/nixos`), `--no-wallpapers`, `--rebuild`.
+Оба раскладывают конфиги (прежние сохраняют рядом с меткой времени),
+переписывают пути под нового пользователя и подставляют существующие обои,
+если записанных в автозапуске на новой машине нет. Ключи общие:
+`--dry-run`, `--no-wallpapers`; у NixOS ещё `--home-only` и `--rebuild`, у
+Arch — `--no-packages`.
 
-`desktop.nix` — это вся система разом: Hyprland с UWSM и xwayland, SDDM,
-PipeWire с wireplumber, NetworkManager, UPower и power-profiles-daemon
-(батарея и профили в панели), udev-правила brightnessctl (яркость без root),
-шрифты во главе с JetBrainsMono Nerd Font, раскладка `us,ru` и пакеты. Сверху
-файла три переключателя: `withApps` (браузеры, мессенджеры, плееры),
-`withGames` (steam с proton-ge, по умолчанию выключен) и выбор matugen.
+**Ставится только то, без чего не работает оболочка**, и то, на что
+ссылаются конфиги: Hyprland с порталом и блокировщиком, SDDM, PipeWire,
+NetworkManager, UPower и power-profiles-daemon, quickshell, matugen, swaybg,
+wl-clipboard, brightnessctl, grim/slurp/swappy/hyprshot, wf-recorder, kitty,
+thunar, jq, inotify-tools, шрифты во главе с JetBrainsMono Nerd Font.
+Браузера, мессенджеров, плеера и игр в наборе нет намеренно: это чужой вкус,
+который незачем навязывать новой машине. Из `~/bin` едут только скрипты, на
+которые ссылаются конфиги, плюс `keycheck`; личные запускалки пропускаются —
+скрипт печатает, какие именно.
 
 Что стоит знать заранее:
 
-* **matugen в nixpkgs — 4.0, а `--prefer` появился позже.** Сервис обоев
-  спрашивает версию через `matugen --version` при запуске и не передаёт ключ,
-  если его нет: иначе matugen ругается на неизвестный аргумент и тема не
-  применяется вовсе. На 4.0 при этом не работает режим «авто» для картинок с
-  несколькими кандидатами цвета — закреплённые цвета работают. Лечится входом
-  флейка: `inputs.matugen.url = "github:InioX/matugen";` плюс
-  `specialArgs = { inherit inputs; }`.
-* **`inputs` нельзя брать аргументом модуля даже со значением по умолчанию.**
-  На системе без флейка `{ inputs ? null, ... }` всё равно валит сборку с
-  `attribute 'inputs' missing`: модульная система лезет за аргументом в
-  `_module.args` раньше, чем доходит до умолчания. Работает только
-  `config._module.args.inputs or null`.
-* **NVIDIA модуль не настраивает.** На ноутбуке это обычно PRIME с
-  переключением, и правила у каждой машины свои; `install.sh` только
-  предупредит, если увидит карту.
+* **matugen нужен 4.2+.** В nixpkgs лежит 4.0, где нет `--prefer`; панель
+  сама спрашивает версию и не передаёт ключ, но режим «авто» в выборе обоев
+  на таких версиях не работает. На NixOS лечится входом флейка
+  (`inputs.matugen.url = "github:InioX/matugen"`), на Arch — пакетом
+  `matugen-bin` из AUR.
+* **Arch требует помощника AUR** (paru или yay): quickshell, matugen и
+  hyprshot только там. Если его нет, скрипт печатает, как поставить paru, и
+  просит запустить себя ещё раз.
+* **NVIDIA ни один из скриптов не настраивает.** На ноутбуке это обычно
+  PRIME с переключением, и правила у каждой машины свои; NixOS-установщик
+  только предупредит, если увидит карту.
 * **История буфера обмена и уведомлений не экспортируется** — в буфере лежит
   что попало, включая пароли. Закреплённые за обоями цвета едут
   (`wallpapers.json`).
 
-Сам по себе конфиг панели к железу не привязан: батарея и ползунок яркости
+Сам конфиг панели к железу не привязан: батарея и ползунок яркости
 появляются, только если они есть, рабочие столы берутся по имени монитора из
 `Variants`, путей в `/sys` не осталось. Из `hyprland.lua` ему нужны биндинги
 `SUPER` → `qs ipc call launcher toggle` (с `release = true`), `SUPER + W` →
-`… wallpaper`, `SUPER + V` → `… clipboard`, `SUPER + F` →
-`hl.dsp.window.fullscreen()` и автозапуск `hl.exec_cmd("qs")` плюс строка
-`swaybg -i …`, которую ведёт выбор обоев.
+`… wallpaper`, `SUPER + V` → `… clipboard`, `CTRL + SUPER + S` →
+`… settings`, `SUPER + F` → `hl.dsp.window.fullscreen()` и автозапуск
+`hl.exec_cmd("qs")` плюс строка `swaybg -i …`, которую ведёт выбор обоев.
 
 ## Особенности этой системы
 

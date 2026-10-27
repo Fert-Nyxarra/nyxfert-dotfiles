@@ -17,13 +17,6 @@ let
   # missing» — значение по умолчанию до неё не доходит.
   flakeInputs = config._module.args.inputs or null;
 
-  # Прикладной софт. Панели он не нужен — выключи, если машина под работу.
-  withApps = true;
-
-  # Игры тянут steam с proton-ge и прорву зависимостей. На ноутбуке обычно
-  # не нужны.
-  withGames = false;
-
   # matugen 4.2+ обязателен: в 4.0 из nixpkgs нет --prefer, а без него режим
   # «авто» в селекторе обоев падает на картинках с несколькими цветами —
   # matugen хочет, чтобы выбор сделал человек в терминале.
@@ -34,52 +27,36 @@ let
     then flakeInputs.matugen.packages.${pkgs.stdenv.hostPlatform.system}.default
     else pkgs.matugen;
 
-  # Без чего панель и Hyprland не работают
-  corePackages = with pkgs; [
+  # Только то, без чего не работает САМА оболочка и то, на что ссылаются
+  # конфиги. Прикладного софта тут нет намеренно: браузер, мессенджеры и
+  # плеер у каждой машины свои, а их список в модуле переноса превращается в
+  # чужой вкус, навязанный новой системе.
+  shellPackages = with pkgs; [
     quickshell          # сама панель
     matugenPkg          # палитра по обоям
     swaybg              # обои
     wl-clipboard        # буфер обмена: wl-paste --watch и wl-copy
     brightnessctl       # яркость без root
-    grim                # скриншоты
+    jq                  # разбор вывода hyprctl в скриптах
+    inotify-tools       # слежение за файлами в ~/bin
+    killall
+    glib                # gdbus — им шлются уведомления без notify-send
+  ];
+
+  # На это ссылается hyprland.lua и скрипты из ~/bin
+  configPackages = with pkgs; [
+    kitty               # терминал из биндов
+    thunar              # файловый менеджер из биндов
+    hyprshot            # скриншоты, SUPER + Print и соседи
+    grim                # нужен hyprshot и ~/bin/screenrec
     slurp               # выбор области
-    swappy              # разметка скриншотов
-    hyprshot            # биндится в hyprland.lua
+    swappy              # разметка скриншота
     wf-recorder         # запись экрана, ~/bin/screenrec
     hypridle
-    hyprlock
-    kitty               # терминал из hyprland.lua
-    jq
-    inotify-tools
-    killall
-    python3
-    glib                # gdbus — им шлются уведомления без notify-send
-    pulseaudio          # pactl для диагностики звука
-    git
-    wget
-    neovim
+    hyprlock            # SUPER + L
     fastfetch           # конфиг едет вместе с остальными
   ];
 
-  appPackages = with pkgs; [
-    firefox
-    google-chrome
-    ayugram-desktop
-    discord
-    spotify
-    vlc
-    libreoffice
-    thunar
-    kdePackages.ark
-    kdePackages.gwenview
-    nwg-look
-    papirus-icon-theme
-    htop
-    cava
-    gh
-  ];
-
-  gamePackages = with pkgs; [ ckan ];
 in
 {
   #### Hyprland и сессия ######################################################
@@ -189,15 +166,9 @@ in
 
   nixpkgs.config.allowUnfree = lib.mkDefault true;
 
-  programs.steam = lib.mkIf withGames {
-    enable = true;
-    extraCompatPackages = [ pkgs.proton-ge-bin ];
-  };
-
-  environment.systemPackages =
-    corePackages
-    ++ lib.optionals withApps appPackages
-    ++ lib.optionals withGames gamePackages;
+  # Прикладной софт ставится отдельно и сюда не попадает — см. комментарий
+  # у shellPackages.
+  environment.systemPackages = shellPackages ++ configPackages;
 
   # Предупреждение видно при каждой сборке, пока matugen берётся из nixpkgs.
   warnings = lib.optional (!matugenFromFlake) ''

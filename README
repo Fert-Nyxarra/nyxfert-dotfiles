@@ -1,8 +1,9 @@
 Окружение: Hyprland + quickshell
-Собрано:   2026-10-26 20:40 на nixos
+Собрано:   2026-10-27 20:02 на nixos
 Откуда:    nyxfert
 NixOS:     26.05.20261020.cd4ea8d (Yarara)
 
 Распаковать и запустить:
-  tar xzf kitB.tar.gz
-  cd nixos-setup && ./install.sh
+  tar xzf kitE.tar.gz
+  cd nixos-setup && ./install.sh        # NixOS
+  cd nixos-setup && ./install-arch.sh   # Arch

@@ -127,15 +127,16 @@ PanelWindow {
         // у остальных — с зазором popupGap.
         x: Theme.barVertical
             ? (Theme.barPosition === "left"
-                ? Theme.barMargin + Theme.barThickness + Theme.popupGap
+                ? Theme.barMargin + Theme.barThickness - Theme.popupOverlap
                 : root.width - Theme.barMargin - Theme.barThickness
-                    - Theme.popupGap - surface.width)
-            : Theme.barSideMargin + root.edgeInset - (surface.seamless ? surface.notch : 0)
+                    + Theme.popupOverlap - surface.width)
+            : Theme.barSideMargin + root.edgeInset
+                - (surface.attachMode === "top" ? surface.notch : 0)
 
         y: Theme.barVertical
-            ? Math.max(Theme.barMargin,
+            ? Math.max(Theme.barMargin - surface.notch,
                 Math.min(root.height - surface.height - Theme.barMargin,
-                         Theme.barSideMargin + root.edgeInset))
+                         Theme.barSideMargin + root.edgeInset - surface.notch))
             : (Theme.barPosition === "bottom"
                 ? root.height - Theme.barMargin - Theme.barThickness
                     - Theme.popupGap - surface.height
@@ -147,10 +148,14 @@ PanelWindow {
         menuWidth: root.menuWidth
         maximumHeight: root.maximumHeight
 
-        seamless: Theme.barPosition === "top"
-        slideFrom: Theme.barPosition === "left" ? "left"
-            : Theme.barPosition === "right" ? "right"
-            : "bottom"
+        // верхняя панель — стык под кромкой, боковая — он же, повёрнутый,
+        // нижняя — обычная карточка
+        attachMode: Theme.barPosition === "top" ? "top"
+            : Theme.barVertical ? "side"
+            : "card"
+
+        sideFlipped: Theme.barPosition === "right"
+        slideFrom: "bottom"
 
         flushLeft: root.edgeInset === 0
         flushRight: false

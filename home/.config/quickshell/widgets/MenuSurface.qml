@@ -28,14 +28,18 @@ Item {
     property bool flushLeft: false
     property bool flushRight: false
 
-    // Приклеено к кромке панели: обратные скругления на стыке и выезд
-    // из-под неё. Так ведёт себя меню у ВЕРХНЕЙ панели — она для этого и
-    // рисовалась. У остальных трёх кромок меню — обычная карточка, которая
-    // выезжает со стороны панели: стык там пришлось бы рисовать заново, в
-    // зеркальном и повёрнутом виде.
-    property bool seamless: true
-    // откуда выезжает карточка, когда seamless выключен: "bottom" | "left" | "right"
+    // Как меню крепится к панели:
+    //   "top"  — висит под верхней кромкой: стык со скруглениями, выезд вниз;
+    //   "side" — приклеено к боковой панели: тот же стык, повёрнутый на 90°;
+    //   "card" — обычная карточка (нижняя панель), выезжает со стороны панели.
+    property string attachMode: "top"
+    // боковая панель справа: стык зеркалим
+    property bool sideFlipped: false
+    // откуда выезжает карточка в режиме "card"
     property string slideFrom: "bottom"
+
+    readonly property bool seamless: root.attachMode !== "card"
+    readonly property bool sideAttached: root.attachMode === "side"
 
     default property alias content: body.data
     property alias header: headerColumn.data
@@ -98,20 +102,29 @@ Item {
     // нижняя грань меню в координатах окна: по ней подрезаются скругления,
     // пока меню ещё выезжает
     readonly property real menuBottom: surface.y + surface.height
+    readonly property real menuRight: root.sideFlipped
+        ? root.menuWidth - surface.x
+        : surface.x + surface.width
 
     // Насколько меню выехало: 0 — спрятано под панелью, 1 — на месте.
     // По этому же числу панель гасит свой угол, поэтому угол и меню идут
     // синхронно: ни «угол уже острый, а меню ещё нет», ни наоборот.
     readonly property real revealProgress: !root.seamless
         ? (root.opened ? 1 : 0)
+        : root.sideAttached
+        ? Math.max(0, Math.min(1, root.menuRight / Math.max(1, root.menuWidth)))
         : root.animatedHeight > 0
         ? Math.max(0, Math.min(1,
             (surface.y + root.animatedHeight + Theme.popupRadius) / root.animatedHeight))
         : 0
 
-    // окно шире самого меню на поля под обратные скругления
-    implicitWidth: root.menuWidth + (root.seamless ? root.notch * 2 : 0)
-    implicitHeight: Math.max(1, Math.round(root.animatedHeight))
+    // Окно шире (или выше) самого меню на поля под обратные скругления: у
+    // верхней панели поля по бокам, у боковой — сверху и снизу.
+    implicitWidth: root.menuWidth
+        + (root.attachMode === "top" ? root.notch * 2 : 0)
+
+    implicitHeight: Math.max(1, Math.round(root.animatedHeight
+        + (root.sideAttached ? root.notch * 2 : 0)))
 
     component NotchCorner: Item {
         id: corner
@@ -167,34 +180,109 @@ Item {
         }
     }
 
+    // То же обратное скругление, но для боковой панели: стык идёт по
+    // вертикали, поэтому координаты у шейпа зеркально переставлены (x↔y).
+    component SideNotchCorner: Item {
+        id: sideCorner
+
+        // пока меню только выезжает из-под панели, скруглять нечего
+        readonly property real r: Math.max(0, Math.min(root.notch,
+            root.menuRight - Theme.popupRadius - Theme.popupOverlap))
+
+        implicitWidth: Theme.popupOverlap + root.notch
+        implicitHeight: root.notch + 1
+        visible: sideCorner.r > 0.5
+
+        Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+                fillColor: Theme.panelColor
+                strokeWidth: 0
+
+                startX: 0
+                startY: root.notch - sideCorner.r
+                PathLine { x: 0; y: root.notch + 1 }
+                PathLine { x: Theme.popupOverlap + sideCorner.r; y: root.notch + 1 }
+                PathAngleArc {
+                    centerX: Theme.popupOverlap + sideCorner.r
+                    centerY: root.notch - sideCorner.r
+                    radiusX: sideCorner.r
+                    radiusY: sideCorner.r
+                    startAngle: 90
+                    sweepAngle: 90
+                }
+                PathLine { x: 0; y: root.notch - sideCorner.r }
+            }
+
+            // рамка панели продолжается по дуге
+            ShapePath {
+                fillColor: "transparent"
+                strokeColor: Theme.panelBorder
+                strokeWidth: 1
+
+                PathAngleArc {
+                    centerX: Theme.popupOverlap + sideCorner.r
+                    centerY: root.notch - sideCorner.r
+                    radiusX: sideCorner.r
+                    radiusY: sideCorner.r
+                    startAngle: 90
+                    sweepAngle: 90
+                }
+            }
+        }
+    }
+
     Rectangle {
         id: surface
 
         // прямоугольник поднят на радиус вверх: верхние скругления и верхняя
         // рамка остаются за границей окна и не рисуются
-        width: root.menuWidth
-        height: root.seamless ? root.animatedHeight + Theme.popupRadius : root.animatedHeight
+        // У боковой панели меню выезжает вбок, поэтому «лишний» радиус,
+        // который прячется под кромкой, добавляется не к высоте, а к ширине.
+        width: root.sideAttached
+            ? root.menuWidth + Theme.popupRadius
+            : root.menuWidth
 
-        // Приклеенное меню стоит выше окна на радиус: его верхние скругления
-        // и верхняя рамка остаются за границей и не рисуются. Карточка же
+        height: root.attachMode === "top"
+            ? root.animatedHeight + Theme.popupRadius
+            : root.animatedHeight
+
+        // Приклеенное меню стоит за кромкой окна на радиус: скругления и
+        // рамка с той стороны остаются снаружи и не рисуются. Карточка же
         // целиком внутри окна и уезжает за ту грань, со стороны которой
         // лежит панель.
-        x: root.seamless ? root.notch
+        x: root.attachMode === "top" ? root.notch
+            : root.sideAttached
+                ? (root.sideFlipped
+                    ? (root.opened ? -Theme.popupRadius : root.menuWidth)
+                    : (root.opened ? -Theme.popupRadius : -(root.menuWidth + Theme.popupRadius)))
             : root.opened ? 0
             : root.slideFrom === "left" ? -root.menuWidth
             : root.slideFrom === "right" ? root.menuWidth
             : 0
 
-        y: root.seamless
+        y: root.attachMode === "top"
             ? (root.opened ? -Theme.popupRadius : -(root.animatedHeight + Theme.popupRadius))
-            : (root.opened ? 0 : root.slideFrom === "bottom" ? root.animatedHeight : 0)
+            : root.sideAttached
+                ? root.notch
+                : (root.opened ? 0 : root.slideFrom === "bottom" ? root.animatedHeight : 0)
 
         radius: Theme.popupRadius
-        // У приклеенного меню верхние углы прямые: обычно их всё равно
-        // срезает обрезка выше, но если она не сработает, меню не станет
-        // вдруг отдельной карточкой со скруглённой макушкой.
-        topLeftRadius: root.seamless ? 0 : radius
-        topRightRadius: root.seamless ? 0 : radius
+
+        // Прямые углы — с той стороны, которой меню прижато к панели. У
+        // верхней это верхние два, у боковой — те, что смотрят на панель.
+        topLeftRadius: root.attachMode === "top" ? 0
+            : root.sideAttached && !root.sideFlipped ? 0
+            : radius
+
+        topRightRadius: root.attachMode === "top" ? 0
+            : root.sideAttached && root.sideFlipped ? 0
+            : radius
+
+        bottomLeftRadius: root.sideAttached && !root.sideFlipped ? 0 : radius
+        bottomRightRadius: root.sideAttached && root.sideFlipped ? 0 : radius
         color: Theme.panelColor
         border.width: 1
         border.color: Theme.panelBorder
@@ -213,7 +301,7 @@ Item {
 
         // карточка у боковой панели уезжает вбок, сигнал нужен и оттуда
         Behavior on x {
-            enabled: !root.seamless
+            enabled: !root.seamless || root.sideAttached
             NumberAnimation {
                 duration: root.slideDuration
                 easing.type: Easing.OutQuint
@@ -224,11 +312,11 @@ Item {
         Item {
             id: content
 
-            x: 0
-            // у приклеенного меню верхний радиус спрятан за кромкой окна,
-            // поэтому содержимое начинается ниже; у карточки — с самого верха
-            y: root.seamless ? Theme.popupRadius : 0
-            width: parent.width
+            // спрятанный за кромкой радиус не должен съедать содержимое:
+            // сдвигаем его на ту же величину с нужной стороны
+            x: root.sideAttached && !root.sideFlipped ? Theme.popupRadius : 0
+            y: root.attachMode === "top" ? Theme.popupRadius : 0
+            width: parent.width - (root.sideAttached ? Theme.popupRadius : 0)
             height: root.animatedHeight
 
             Text {
@@ -370,7 +458,7 @@ Item {
     NotchCorner {
         x: 0
         y: 0
-        visible: root.seamless
+        visible: root.attachMode === "top"
         opacity: root.flushLeft ? 0 : 1
     }
 
@@ -378,8 +466,37 @@ Item {
     NotchCorner {
         x: root.notch + root.menuWidth - 1
         y: 0
-        visible: root.seamless
+        visible: root.attachMode === "top"
         opacity: root.flushRight ? 0 : 1
         transform: Scale { xScale: -1; origin.x: (root.notch + 1) / 2 }
+    }
+
+    // стык с боковой панелью: сверху и снизу от меню
+    SideNotchCorner {
+        x: root.sideFlipped ? root.menuWidth - width : 0
+        y: 0
+        visible: root.sideAttached
+
+        transform: Scale {
+            xScale: root.sideFlipped ? -1 : 1
+            origin.x: (Theme.popupOverlap + root.notch) / 2
+        }
+    }
+
+    SideNotchCorner {
+        x: root.sideFlipped ? root.menuWidth - width : 0
+        y: root.notch + root.animatedHeight - 1
+        visible: root.sideAttached
+
+        transform: [
+            Scale {
+                yScale: -1
+                origin.y: (root.notch + 1) / 2
+            },
+            Scale {
+                xScale: root.sideFlipped ? -1 : 1
+                origin.x: (Theme.popupOverlap + root.notch) / 2
+            }
+        ]
     }
 }

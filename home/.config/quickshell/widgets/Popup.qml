@@ -125,10 +125,12 @@ PopupWindow {
     // У верхней панели меню висит под ней и заезжает под кромку на
     // popupOverlap — шва не видно. У остальных трёх это обычная карточка с
     // зазором popupGap.
+    // У боковой панели меню не отстоит, а заезжает под кромку на
+    // popupOverlap — ровно как под верхней: иначе на стыке видна щель.
     anchor.rect.x: Math.round(Theme.barVertical
         ? (Theme.barPosition === "left"
-            ? root.anchorItem.width + root.barInset + Theme.popupGap
-            : -root.barInset - Theme.popupGap)
+            ? root.anchorItem.width + root.barInset - Theme.popupOverlap
+            : -root.barInset + Theme.popupOverlap)
         : root.placement.shift)
 
     anchor.rect.y: Math.round(Theme.barVertical
@@ -209,10 +211,14 @@ PopupWindow {
         maximumHeight: root.maximumHeight
 
         // стык с панелью рисуется только у верхней кромки — см. MenuSurface
-        seamless: Theme.barPosition === "top"
-        slideFrom: Theme.barPosition === "left" ? "left"
-            : Theme.barPosition === "right" ? "right"
-            : "bottom"
+        // верхняя панель — стык под кромкой, боковая — он же, повёрнутый,
+        // нижняя — обычная карточка
+        attachMode: Theme.barPosition === "top" ? "top"
+            : Theme.barVertical ? "side"
+            : "card"
+
+        sideFlipped: Theme.barPosition === "right"
+        slideFrom: "bottom"
 
         flushLeft: root.placement.flushLeft
         flushRight: root.placement.flushRight
