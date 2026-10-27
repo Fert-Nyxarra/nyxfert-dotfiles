@@ -1,15 +1,5 @@
 pragma Singleton
 
-// ВАЖНО: pragma Singleton — первой строкой. Сканер синглтонов в Quickshell
-// считает фигурные скобки и не пропускает комментарии, поэтому "{" в шапке
-// выше pragma превращает файл в обычный тип, и Colors.* перестают работать.
-
-// ~/.config/matugen/templates/quickshell-colors.qml
-// генерирует matugen -> ~/.config/quickshell/Colors.qml
-//
-// Имена ролей Material You изменены: свойство, начинающееся на "on" + заглавная
-// буква, QML считает обработчиком сигнала, поэтому on_primary -> textOnPrimary.
-
 import QtQuick
 import Quickshell
 

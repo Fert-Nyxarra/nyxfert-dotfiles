@@ -1,7 +1,3 @@
-// ~/.config/quickshell/bar/MediaPlayer.qml
-// Плеер в контрол-центре: обложка, что играет и кнопки управления.
-// Берёт первый активный MPRIS-источник (Spotify, браузер, что угодно).
-
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
@@ -28,7 +24,6 @@ Item {
         color: Theme.alpha(Colors.surfaceContainerHigh, 0.7)
     }
 
-    // обложка
     Rectangle {
         id: art
 
@@ -85,7 +80,6 @@ Item {
         }
     }
 
-    // кнопки
     component PlayerButton: Rectangle {
         id: button
 

@@ -1,11 +1,3 @@
-// ~/.config/quickshell/bar/ClipboardMenu.qml
-// История буфера обмена на SUPER + V — как в Windows.
-//
-// Меню собственным слоем, а не всплывающим окном: его открывают клавишей, а
-// в Hyprland popup получает ЛИБО клавиатуру, либо мышь (см. README).
-// Стрелки ходят по списку, Enter кладёт запись обратно в буфер и закрывает,
-// Esc закрывает, ПКМ по строке — забыть запись.
-
 import QtQuick
 import Quickshell.Widgets
 import qs
@@ -24,9 +16,6 @@ MenuWindow {
     maximumHeight: 520
     edgeInset: 0
 
-    // Параметр без типа намеренно: запись — это объект {kind, mime, value},
-    // а QML-функция с типом string молча приводит его к
-    // "[object V4ReferenceObject]" и именно это уезжает в буфер.
     function pick(item): void {
         ClipboardService.copy(item);
         root.close();
@@ -62,8 +51,6 @@ MenuWindow {
     Repeater {
         model: root.items
 
-        // Текст и картинка рисуются по-разному, но живут одной строкой
-        // списка: стрелки ходят по ним вперемешку.
         Item {
             id: row
 
@@ -88,7 +75,6 @@ MenuWindow {
                     const lines = ClipboardService.lineCount(row.value);
                     if (lines < 2) return "";
 
-                    // 2 строки, но 5 строк — русский счёт на единицу не ложится
                     const last = lines % 10;
                     const tens = lines % 100;
                     const word = tens >= 11 && tens <= 14 ? "строк"
@@ -103,7 +89,6 @@ MenuWindow {
                 onRightClicked: ClipboardService.forget(row.modelData)
             }
 
-            // предпросмотр скопированной картинки
             Rectangle {
                 anchors.fill: parent
                 visible: row.isImage
@@ -129,8 +114,7 @@ MenuWindow {
 
                     Image {
                         anchors.fill: parent
-                        // картинка может быть и в десяток мегабайт — в
-                        // память тянем уменьшенную копию, а не оригинал
+
                         source: row.isImage ? "file://" + row.value : ""
                         sourceSize.width: 184
                         fillMode: Image.PreserveAspectCrop
@@ -152,7 +136,6 @@ MenuWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     x: parent.width - width - 10
 
-                    // из mime получается внятная подпись: image/png -> PNG
                     text: ClipboardService.mimeOf(row.modelData).replace("image/", "").toUpperCase()
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSize - 2

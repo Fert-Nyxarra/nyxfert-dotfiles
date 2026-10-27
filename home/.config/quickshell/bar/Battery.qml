@@ -1,7 +1,3 @@
-// ~/.config/quickshell/bar/Battery.qml
-// Батарея ноутбука: значок и проценты. На машине без батареи модуль просто
-// не показывается, так что конфиг одинаково годится и для стационарной.
-
 import QtQuick
 import Quickshell.Services.UPower
 import qs
@@ -41,7 +37,6 @@ BarItem {
         text: {
             if (!root.battery) return "";
 
-            // десять ступеней значка плюс отдельный «на зарядке»
             const level = Math.max(0, Math.min(9, Math.floor(root.percent / 10)));
             const icons = ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂"];
             const glyph = root.charging ? "󰂄" : (root.percent >= 100 ? "󰁹" : icons[level]);

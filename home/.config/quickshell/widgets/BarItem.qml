@@ -1,25 +1,15 @@
-// ~/.config/quickshell/widgets/BarItem.qml
-// Элемент панели. Раньше каждый модуль был отдельным «островком» со своим
-// фоном и рамкой; теперь фон один — его рисует Bar.qml, — а элементы внутри
-// плоские и подсвечиваются только под курсором или когда у них открыто меню.
-//
-// Порядок в data важен: ряд с содержимым идёт последним, то есть лежит ПОВЕРХ
-// общей MouseArea. Иначе она перехватывала бы клики у вложенных MouseArea
-// (точек рабочих столов, иконок трея).
-
 import QtQuick
 import qs
 
 Item {
     id: root
 
-    // всё, что объявлено внутри BarItem, попадает в ряд inner
     default property alias content: inner.data
     property alias spacing: inner.spacing
 
     property int horizontalPadding: Theme.padding
     property bool interactive: false
-    property bool active: false        // подсветка: у элемента открыто меню
+    property bool active: false
 
     readonly property bool hovered: hover.hovered
 
@@ -28,8 +18,6 @@ Item {
     signal middleClicked
     signal wheel(int delta)
 
-    // У боковой панели модуль вытянут поперёк: отступы ложатся по вертикали,
-    // а поперечный размер фиксирован толщиной элемента.
     implicitWidth: Theme.barVertical
         ? Theme.itemHeight
         : inner.implicitWidth + horizontalPadding * 2
@@ -52,8 +40,6 @@ Item {
             }
         },
 
-        // HoverHandler, а не MouseArea.containsMouse: обработчик получает
-        // наведение даже когда курсор стоит над вложенной MouseArea
         HoverHandler { id: hover },
 
         MouseArea {
@@ -63,7 +49,7 @@ Item {
             cursorShape: root.interactive ? Qt.PointingHandCursor : Qt.ArrowCursor
 
             onClicked: mouse => {
-                // клик мимо «своего» модуля гасит открытое меню
+
                 Menus.clicked(root);
 
                 if (mouse.button === Qt.RightButton) root.rightClicked();
@@ -74,9 +60,6 @@ Item {
             onWheel: event => root.wheel(event.angleDelta.y)
         },
 
-        // Grid, а не Row: у боковой панели содержимое модуля встаёт
-        // столбиком, и направление должно меняться без второго набора
-        // элементов.
         Grid {
             id: inner
 
@@ -84,7 +67,7 @@ Item {
             spacing: Theme.gap
 
             flow: Theme.barVertical ? Grid.TopToBottom : Grid.LeftToRight
-            // -1 значит «считай сам», см. комментарий в Bar.qml
+
             rows: Theme.barVertical ? -1 : 1
             columns: Theme.barVertical ? 1 : -1
 

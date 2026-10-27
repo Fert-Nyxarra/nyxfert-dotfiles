@@ -1,8 +1,3 @@
-// ~/.config/quickshell/bar/LevelPill.qml
-// Громкость и яркость в полноэкранном режиме: панель спрятана, а значит и
-// меню под ней показать негде. Вместо него — пилюля у нижнего края экрана,
-// выпрыгивающая пружиной.
-
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -30,20 +25,16 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    // слой ничего не резервирует и чужих полос не замечает
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     visible: false
 
-    // якорь только снизу: по горизонтали слой встаёт по центру экрана сам
     anchors.bottom: true
     margins.bottom: 70
 
-    // запас вокруг пилюли — в него она «пружинит», не упираясь в край окна
     implicitWidth: pill.implicitWidth + 60
     implicitHeight: pill.implicitHeight + 60
 
-    // клики сквозь: индикатор ничего не ловит
     mask: Region {}
 
     function showVolume(): void {
@@ -83,7 +74,6 @@ PanelWindow {
         border.width: 1
         border.color: Theme.panelBorder
 
-        // выпрыгивает снизу и чуть перелетает — та же пружина, что у меню
         y: (parent.height - height) / 2 + (root.shown ? 0 : 40)
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.9
@@ -108,7 +98,6 @@ PanelWindow {
             NumberAnimation {
                 duration: 160
 
-                // окно гасим, когда пилюля доиграла уход
                 onRunningChanged: if (!running && !root.shown) root.visible = false
             }
         }

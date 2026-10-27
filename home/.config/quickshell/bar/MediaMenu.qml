@@ -1,9 +1,3 @@
-// ~/.config/quickshell/bar/MediaMenu.qml
-// Меню проигрывателя: обложка, что играет, перемотка и переключение треков.
-//
-// position у MPRIS обновляется лениво — пока меню открыто, дёргаем
-// positionChanged, иначе полоса прогресса стояла бы на месте.
-
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
@@ -45,7 +39,6 @@ Popup {
         onTriggered: root.player.positionChanged()
     }
 
-    // обложка и подписи
     Item {
         width: root.contentWidth
         implicitHeight: 68
@@ -117,7 +110,6 @@ Popup {
         }
     }
 
-    // перемотка
     Item {
         width: root.contentWidth
         implicitHeight: 30
@@ -159,7 +151,6 @@ Popup {
         }
     }
 
-    // кнопки
     component PlayerButton: Rectangle {
         id: button
 

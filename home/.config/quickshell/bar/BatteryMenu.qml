@@ -1,9 +1,3 @@
-// ~/.config/quickshell/bar/BatteryMenu.qml
-// Меню батареи: шкала заряда с состоянием и выбор профиля потребления.
-//
-// Профили берутся из power-profiles-daemon через UPower. Если демона нет,
-// секция профилей просто не показывается, а шкала остаётся.
-
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
@@ -53,7 +47,6 @@ Popup {
         return left === "" ? "от батареи" : "хватит на " + left;
     }
 
-    // шкала заряда
     Item {
         width: root.contentWidth
         implicitHeight: 54
@@ -108,7 +101,6 @@ Popup {
 
     MenuSeparator { width: root.contentWidth }
 
-    // профили потребления
     component ProfileRow: MenuRow {
         required property int profile
 

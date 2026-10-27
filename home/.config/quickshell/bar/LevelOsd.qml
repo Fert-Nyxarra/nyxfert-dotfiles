@@ -1,11 +1,3 @@
-// ~/.config/quickshell/bar/LevelOsd.qml
-// Всплывающий индикатор громкости и яркости — меню под модулем громкости.
-// Отдельного значка у яркости нет намеренно: индикатор общий, а показывает
-// то, что сейчас меняли.
-//
-// managed: false — не участвует в правиле «одно меню за раз»: крутить
-// громкость можно и при открытом меню. grabFocus: false — и ввод не крадёт.
-
 import QtQuick
 import qs
 import qs.widgets
@@ -13,12 +5,10 @@ import qs.widgets
 Popup {
     id: root
 
-    // живые значения громкости приходят из модуля; яркость берём сами
     required property real volume
     required property bool muted
     required property string volumeGlyph
 
-    // что показываем: "volume" или "brightness"
     property string mode: "volume"
 
     readonly property bool brightnessMode: root.mode === "brightness"

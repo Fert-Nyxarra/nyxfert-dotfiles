@@ -1,11 +1,3 @@
-// ~/.config/quickshell/bar/NotificationToast.qml
-// Плашка нового уведомления. Это тот же Popup, что и контекстные меню,
-// поэтому новое уведомление выезжает из панели ровно так же, как меню.
-//
-// managed: false — плашка не участвует в правиле «одно меню за раз»:
-// пришедшее уведомление не должно захлопывать открытое меню.
-// grabFocus: false — и не должно перехватывать ввод.
-
 import QtQuick
 import Quickshell.Services.Notifications
 import qs
@@ -29,7 +21,6 @@ Popup {
         root.notification = notification;
         root.open();
 
-        // важные висят, пока их не уберут руками
         if (root.critical) {
             hideTimer.stop();
             return;
@@ -45,8 +36,6 @@ Popup {
         onTriggered: root.close()
     }
 
-    // Убираем уведомление не сразу, а когда плашка уже уехала: иначе объект
-    // уничтожается под ещё видимой карточкой и она на глазах пустеет.
     Timer {
         id: dismissTimer
 
@@ -65,7 +54,6 @@ Popup {
         dismissTimer.restart();
     }
 
-    // уведомление закрыли из центра или оно само истекло — убираем плашку
     Connections {
         target: NotificationService
 

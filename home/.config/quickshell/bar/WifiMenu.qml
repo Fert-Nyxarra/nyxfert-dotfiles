@@ -1,10 +1,3 @@
-// ~/.config/quickshell/bar/WifiMenu.qml
-// Контекстное меню сети: выключатель Wi-Fi, список точек доступа,
-// подключение/отключение и ввод пароля для незнакомых сетей.
-//
-// Сканирование включаем только пока меню открыто — иначе NetworkManager
-// будет дёргать радио постоянно.
-
 import QtQuick
 import Quickshell.Networking
 import qs
@@ -15,14 +8,13 @@ Popup {
 
     title: "Сеть"
     preferredWidth: 320
-    // клавиатура нужна, только когда спрашиваем пароль
+
     wantsKeyboard: root.pendingNetwork !== null
 
     readonly property var devices: Networking.devices ? Networking.devices.values : []
     readonly property var wifiDevice: root.devices.find(d => d.type === DeviceType.Wifi) ?? null
     readonly property var wiredDevice: root.devices.find(d => d.type === DeviceType.Wired) ?? null
 
-    // сеть, для которой запрошен пароль, и сам набираемый пароль
     property var pendingNetwork: null
     property string psk: ""
 
@@ -50,8 +42,6 @@ Popup {
         return !open && !network.known;
     }
 
-    // Ввод приходит из панели (см. Popup.wantsKeyboard): поле внутри меню
-    // клавиатуру не получает, поэтому пароль набираем сами.
     function handleKey(event): void {
         event.accepted = true;
 
@@ -98,7 +88,6 @@ Popup {
         root.close();
     }
 
-    // сканируем, пока меню открыто
     Binding {
         target: root.wifiDevice
         property: "scannerEnabled"
@@ -108,7 +97,6 @@ Popup {
 
     onOpenedChanged: if (!root.opened) root.cancelPassword()
 
-    // выключатель Wi-Fi
     MenuRow {
         width: root.contentWidth
         glyph: Networking.wifiEnabled ? "󰖩" : "󰖪"
@@ -120,7 +108,6 @@ Popup {
         onClicked: Networking.wifiEnabled = !Networking.wifiEnabled
     }
 
-    // проводное подключение, если оно есть
     MenuRow {
         width: root.contentWidth
         visible: root.wiredDevice !== null
@@ -157,7 +144,7 @@ Popup {
                 : ""
 
             onClicked: root.activate(modelData)
-            // ПКМ по сохранённой сети — забыть её
+
             onRightClicked: if (modelData.known) modelData.forget()
         }
     }
@@ -170,7 +157,6 @@ Popup {
         label: "Поиск сетей…"
     }
 
-    // ввод пароля для незнакомой защищённой сети
     Item {
         width: root.contentWidth
         implicitHeight: visible ? Theme.rowHeight + 8 : 0
@@ -219,7 +205,6 @@ Popup {
                 color: Colors.outline
             }
 
-            // каретка: поля ввода нет, рисуем сами
             Rectangle {
                 x: 30 + Math.min(pskText.contentWidth, pskText.width) + 1
                 anchors.verticalCenter: parent.verticalCenter

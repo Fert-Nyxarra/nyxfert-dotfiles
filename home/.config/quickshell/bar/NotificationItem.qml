@@ -1,8 +1,3 @@
-// ~/.config/quickshell/bar/NotificationItem.qml
-// Карточка уведомления: иконка, приложение, время, заголовок, текст и
-// кнопки действий. Используется и в центре уведомлений, и во всплывающей
-// плашке нового уведомления.
-
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
@@ -15,8 +10,6 @@ Rectangle {
 
     required property var notification
 
-    // Уведомление могут закрыть (и уничтожить) прямо под нами, поэтому все
-    // обращения к нему защищены проверкой: иначе в лог сыплются TypeError.
     readonly property bool critical: root.notification
         && root.notification.urgency === NotificationUrgency.Critical
 
@@ -34,7 +27,6 @@ Rectangle {
         ColorAnimation { duration: 120 }
     }
 
-    // у важных уведомлений полоска слева
     Rectangle {
         x: 0
         y: 8
@@ -45,8 +37,6 @@ Rectangle {
         color: Colors.error
     }
 
-    // iconPath со вторым аргументом true возвращает пустую строку, если
-    // иконки нет, — иначе IconImage рисует «битую картинку»
     readonly property string iconSource: {
         const n = root.notification;
         if (!n) return "";
@@ -76,7 +66,6 @@ Rectangle {
         source: root.iconSource
     }
 
-    // запасной значок, когда приложение иконки не дало
     Text {
         x: 12
         y: 12
@@ -106,7 +95,6 @@ Rectangle {
         }
     }
 
-    // крестик появляется под курсором
     Text {
         id: closeButton
 
@@ -190,7 +178,6 @@ Rectangle {
             color: Colors.subtext
         }
 
-        // кнопки действий, кроме «по умолчанию» — она висит на клике
         Row {
             spacing: 6
             topPadding: 4

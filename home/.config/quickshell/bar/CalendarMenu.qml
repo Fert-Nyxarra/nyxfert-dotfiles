@@ -1,10 +1,3 @@
-// ~/.config/quickshell/bar/CalendarMenu.qml
-// Календарь под часами. Открывается по наведению, поэтому ввод не
-// перехватывает (grabFocus: false) — иначе меню воровало бы клики у окон.
-//
-// Сетка считается руками: QtQuick.Controls с его MonthGrid тянуть ради одного
-// виджета незачем.
-
 import QtQuick
 import Quickshell
 import qs
@@ -15,7 +8,6 @@ Popup {
 
     readonly property int cellSize: 34
 
-    // 0 — текущий месяц, ±n — листание стрелками
     property int monthOffset: 0
 
     grabFocus: false
@@ -37,18 +29,13 @@ Popup {
             && a.getDate() === b.getDate();
     }
 
-    // toLocaleDateString("MMMM") даёт родительный падеж («октября»),
-    // поэтому имя месяца берём отдельно
     readonly property string monthName: root.capitalize(
         Qt.locale("ru_RU").standaloneMonthName(root.viewDate.getMonth(), Locale.LongFormat))
         + " " + root.viewDate.getFullYear()
 
-    // первое число показываемого месяца
     readonly property var viewDate: new Date(
         clock.date.getFullYear(), clock.date.getMonth() + root.monthOffset, 1)
 
-    // 42 клетки: неделя начинается с понедельника, хвосты соседних месяцев
-    // показываем приглушённо
     readonly property var days: {
         const first = root.viewDate;
         const shift = (first.getDay() + 6) % 7;
@@ -60,10 +47,8 @@ Popup {
         return list;
     }
 
-    // при закрытии возвращаемся к текущему месяцу
     onOpenedChanged: if (!root.opened) root.monthOffset = 0
 
-    // стрелка листания месяцев
     component NavButton: Rectangle {
         id: navButton
 
@@ -97,7 +82,6 @@ Popup {
         }
     }
 
-    // строка с названием месяца и стрелками
     Item {
         width: root.contentWidth
         implicitHeight: 32
@@ -118,7 +102,6 @@ Popup {
             font.weight: Font.DemiBold
             color: root.monthOffset === 0 ? Colors.text : Colors.primary
 
-            // клик по названию возвращает к текущему месяцу
             MouseArea {
                 anchors.fill: parent
                 anchors.margins: -6
@@ -136,7 +119,6 @@ Popup {
         }
     }
 
-    // шапка с днями недели
     Row {
         width: root.contentWidth
 

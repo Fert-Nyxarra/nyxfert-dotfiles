@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# common.sh — то, что одинаково для любой системы: раскладывание конфигов,
-# обоев и скриптов по домашнему каталогу.
-#
-# Сам по себе не запускается, его подключают install.sh (NixOS) и
-# install-arch.sh (Arch).
 
 say()  { printf '\033[1;36m==\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*"; }
@@ -21,7 +16,6 @@ check_not_root() {
     [ "$(id -u)" != 0 ] || die "запускай от своего пользователя, а не от root — скрипт сам позовёт sudo"
 }
 
-# раскладывает конфиги, скрипты, обои и закреплённые цвета
 install_home_files() {
     SRC_USER="$(cat "$KIT/MANIFEST_USER" 2>/dev/null || echo nyxfert)"
     DST_USER="$(id -un)"
@@ -45,8 +39,6 @@ install_home_files() {
         done
     fi
 
-    # закреплённые за обоями цвета — не обязательны, но без них выбор обоев
-    # начнётся с чистого листа
     if [ -f "$KIT/home/state/wallpapers.json" ]; then
         run cp "$KIT/home/state/wallpapers.json" "$HOME/.local/state/quickshell/wallpapers.json"
     fi
@@ -60,8 +52,6 @@ install_home_files() {
         warn "обои не копировались — положи что-нибудь в ~/Wallpapers, иначе селектор будет пуст"
     fi
 
-    # В конфигах абсолютный путь ровно один — строка автозапуска swaybg в
-    # hyprland.lua. Остальное берёт $HOME само.
     if [ "$SRC_USER" != "$DST_USER" ] && [ "${DRY:-0}" = 0 ]; then
         say "переписываю пути /home/$SRC_USER -> $HOME"
         grep -rl "/home/$SRC_USER" "$HOME/.config/quickshell" "$HOME/.config/hypr" \
@@ -71,7 +61,6 @@ install_home_files() {
             done
     fi
 
-    # обои из автозапуска могли не приехать — подставляем первую попавшуюся
     if [ "${DRY:-0}" = 0 ]; then
         want="$(grep -o 'swaybg -i [^"]*' "$HOME/.config/hypr/hyprland.lua" 2>/dev/null | head -1 | sed 's|swaybg -i ||')"
         if [ -n "$want" ] && [ ! -f "$want" ]; then

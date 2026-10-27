@@ -1,7 +1,3 @@
-// ~/.config/quickshell/widgets/VerticalSlider.qml
-// Вертикальный ползунок: заливка снизу, значок внизу, проценты сверху.
-// Используется в контрол-центре для яркости и громкости.
-
 import QtQuick
 import qs
 
@@ -12,7 +8,6 @@ Item {
     property string glyph: ""
     property bool muted: false
 
-    // сюда приходит новое значение 0..1
     signal moved(real value)
 
     implicitWidth: 66

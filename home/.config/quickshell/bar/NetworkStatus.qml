@@ -1,8 +1,3 @@
-// ~/.config/quickshell/bar/NetworkStatus.qml
-// Состояние сети через NetworkManager (модуль Quickshell.Networking).
-// В панели только иконка — название сети видно в меню.
-// ЛКМ — меню со списком Wi-Fi сетей.
-
 import Quickshell.Networking
 import qs
 import qs.widgets

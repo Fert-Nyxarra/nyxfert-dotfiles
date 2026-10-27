@@ -1,12 +1,3 @@
-// ~/.config/quickshell/bar/NowPlaying.qml
-// Что сейчас играет: эквалайзер и название трека справа от рабочих столов.
-//
-// Браузеры намеренно отфильтрованы: у любой вкладки с видео есть MPRIS, и
-// панель дёргалась бы на каждый ролик. Остаются «настоящие» плееры —
-// Spotify, Telegram/AyuGram, музыкальные клиенты.
-//
-// ЛКМ — меню с перемоткой, ПКМ — пауза, колесо — перемотка на ±5 с.
-
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
@@ -16,7 +7,6 @@ import qs.widgets
 BarItem {
     id: root
 
-    // по этим словам в имени источника понимаем, что это браузер
     readonly property var browsers: [
         "chrome", "chromium", "firefox", "brave", "vivaldi", "opera", "edge",
         "yandex", "librewolf", "waterfox", "floorp", "zen", "qutebrowser",
@@ -41,8 +31,6 @@ BarItem {
 
     readonly property bool playing: root.player !== null && root.player.isPlaying
 
-    // показываемся, когда что-то играет или хотя бы известен трек
-    // У боковой панели названию песни негде поместиться — модуль прячем
     visible: root.player !== null && !Theme.barVertical
         && (root.playing || root.player.trackTitle !== "" || root.player.trackArtist !== "")
 
@@ -85,7 +73,6 @@ BarItem {
             const title = root.player.trackTitle;
             const artist = root.player.trackArtist;
 
-            // без тегов (бывает у локальных файлов) показываем сам источник
             if (title === "" && artist === "") return root.player.identity;
             if (title === "") return artist;
             if (artist === "") return title;

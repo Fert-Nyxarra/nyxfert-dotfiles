@@ -1,12 +1,3 @@
-// ~/.config/quickshell/bar/LauncherMenu.qml
-// Лаунчер приложений: поиск по .desktop-файлам плюс три кнопки питания.
-//
-// Прижат к левому краю острова (edgeInset: 0), и Bar.qml по флагу
-// Launcher.menuOpen разглаживает нижний левый угол панели.
-//
-// Это не Popup, а собственный слой (MenuWindow): всплывающему окну Hyprland
-// не отдаёт мышь и клавиатуру одновременно, а лаунчеру нужны обе.
-
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -21,7 +12,7 @@ MenuWindow {
 
     edgeInset: 0
     contentSpacing: 0
-    // лаунчер открывают часто — ему живее остальных меню
+
     slideDuration: 230
     preferredWidth: 420
     maximumWidth: 420
@@ -30,9 +21,6 @@ MenuWindow {
     property string query: ""
     property int selected: 0
 
-    // Полный список живёт всегда и в неизменном порядке: строки не создаются
-    // и не уничтожаются при вводе, а сами схлопываются и гаснут. Иначе
-    // отфильтрованные приложения пропадали бы рывком.
     readonly property var entries: {
         const all = DesktopEntries.applications.values.filter(entry => !entry.noDisplay);
         all.sort((a, b) => a.name.localeCompare(b.name));
@@ -41,12 +29,10 @@ MenuWindow {
 
     readonly property string needle: root.query.trim().toLowerCase()
 
-    // то, что осталось после фильтра, — по нему ходят стрелки и Enter
     readonly property var results: root.needle === ""
         ? root.entries
         : root.entries.filter(entry => root.score(entry, root.needle) > 0)
 
-    // чем раньше совпадение и чем «главнее» поле, тем выше результат
     function score(entry, q: string): int {
         const name = (entry.name ?? "").toLowerCase();
         if (name.startsWith(q)) return 4;
@@ -65,9 +51,6 @@ MenuWindow {
         root.close();
     }
 
-    // Ввод приходит из панели (см. Popup.wantsKeyboard), поэтому строку
-    // поиска набираем сами, без TextInput: внутри меню он всё равно не
-    // получил бы ни одного нажатия.
     function handleKey(event): void {
         event.accepted = true;
 
@@ -104,7 +87,6 @@ MenuWindow {
         root.ensureVisible(root.selected);
     }
 
-    // прокрутить список к выбранной строке
     function ensureVisible(index: int): void {
         const entry = root.results[index];
         if (!entry) return;
@@ -132,8 +114,6 @@ MenuWindow {
         if (root.opened) root.view.contentY = 0;
     }
 
-    // Строка поиска висит в шапке меню, а не в списке: иначе она уезжала бы
-    // вместе с прокруткой приложений.
     header: Rectangle {
         width: root.contentWidth
         implicitHeight: 38
@@ -177,7 +157,6 @@ MenuWindow {
             color: Colors.outline
         }
 
-        // каретка: поля ввода нет, рисуем сами
         Rectangle {
             x: 38 + Math.min(queryText.contentWidth, queryText.width) + 1
             anchors.verticalCenter: parent.verticalCenter
@@ -200,7 +179,6 @@ MenuWindow {
         }
     }
 
-    // список приложений
     Repeater {
         id: repeater
         model: root.entries
@@ -217,7 +195,7 @@ MenuWindow {
             width: root.contentWidth
             height: appRow.matched ? root.rowHeight : 0
             opacity: appRow.matched ? 1 : 0
-            // уезжает влево, пока гаснет
+
             x: appRow.matched ? 0 : -14
             clip: true
             visible: height > 0.5
@@ -325,8 +303,6 @@ MenuWindow {
         label: "Ничего не найдено"
     }
 
-    // Кнопки питания висят в подвале меню, а не в списке: иначе они уезжали
-    // бы вместе с прокруткой приложений.
     footer: [
         MenuSeparator { width: root.contentWidth },
 
@@ -414,7 +390,6 @@ MenuWindow {
         }
     ]
 
-    // «Завершить сеанс» повторяет то, что висит на SUPER + M в hyprland.lua
     Process {
         id: logoutProcess
         command: ["sh", "-c", "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"]

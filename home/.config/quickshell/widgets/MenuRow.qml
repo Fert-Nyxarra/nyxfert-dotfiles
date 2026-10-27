@@ -1,7 +1,3 @@
-// ~/.config/quickshell/widgets/MenuRow.qml
-// Строка контекстного меню: слева иконка (глиф Nerd Font или картинка),
-// по центру подпись, справа пояснение или стрелка подменю.
-
 import QtQuick
 import Quickshell.Widgets
 import qs
@@ -9,12 +5,12 @@ import qs
 Rectangle {
     id: root
 
-    property string glyph: ""        // символ Nerd Font слева
-    property string iconSource: ""   // картинка слева (иконки трея)
+    property string glyph: ""
+    property string iconSource: ""
     property string label: ""
-    property string trailing: ""     // текст справа
-    property bool submenu: false     // показать стрелку «есть подменю»
-    property bool highlight: false   // строка выделена (текущее устройство)
+    property string trailing: ""
+    property bool submenu: false
+    property bool highlight: false
     property bool rowEnabled: true
 
     property color labelColor: root.highlight ? Colors.primary : Colors.text

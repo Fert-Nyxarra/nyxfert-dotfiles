@@ -1,8 +1,3 @@
-// ~/.config/quickshell/bar/LevelIndicator.qml
-// Начинка всплывающего индикатора: значок, полоса и проценты.
-// Одна и та же для громкости и яркости, в меню у панели и в «пилюле»
-// поверх полного экрана.
-
 import QtQuick
 import qs
 import qs.widgets
@@ -12,7 +7,7 @@ Item {
 
     required property real value
     required property string glyph
-    // приглушённый вид: громкость выключена
+
     property bool dim: false
 
     implicitHeight: 32
@@ -60,8 +55,6 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         x: parent.width - width - 10
 
-        // В mute проценты остаются: уровень-то сохранён, а о выключенном
-        // звуке и так говорят значок и погасшая полоса.
         text: Math.round(root.value * 100) + "%"
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize - 2

@@ -1,19 +1,3 @@
-// ~/.config/quickshell/widgets/MenuWindow.qml
-// Меню, которое живёт собственным слоем, а не всплывающим окном.
-//
-// Зачем так: в Hyprland всплывающее окно получает ЛИБО клавиатуру, либо
-// мышь. С keyboardFocus: Exclusive у панели popup перестаёт получать
-// указатель, а без него клавиатура не доходит, если меню открыли клавишей,
-// а не кликом. Обычный слой wlr-layer-shell получает и то и другое.
-//
-// Слой растянут на весь экран и прозрачен: клик мимо меню закрывает его.
-// Так же поступают rofi и прочие лаунчеры, и это заодно решает две беды:
-// перехват фокуса (HyprlandFocusGrab) глотал клики по самой панели, так что
-// меню нельзя было закрыть тем же значком, которым открыли; а при попытке
-// добавить панель в перехват клики всё равно не доходили.
-//
-// Внешность общая с контекстными меню — MenuSurface.
-
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -22,14 +6,13 @@ import qs
 PanelWindow {
     id: root
 
-    // монитор, к панели которого прижимаемся
     required property var barScreen
 
     property bool opened: false
     property int preferredWidth: Theme.popupWidth
     property int maximumWidth: 460
     property int maximumHeight: 560
-    // отступ от левого края острова; 0 — вплотную, и тогда модуль гасит угол
+
     property int edgeInset: 0
 
     property alias title: surface.title
@@ -40,10 +23,9 @@ PanelWindow {
     property alias slideDuration: surface.slideDuration
     readonly property alias view: surface.view
     readonly property int contentWidth: surface.contentWidth
-    // ход выезда меню: по нему панель гасит свой угол (см. Bar.qml)
+
     readonly property real revealProgress: surface.revealProgress
 
-    // меню на экране, включая анимацию закрытия
     readonly property bool attached: root.visible
 
     signal keyPressed(var event)
@@ -55,13 +37,11 @@ PanelWindow {
 
     WlrLayershell.namespace: "quickshell:menu"
     WlrLayershell.layer: WlrLayer.Top
-    // слой берёт клавиатуру себе, пока открыт; мышь при этом остаётся
+
     WlrLayershell.keyboardFocus: root.opened
         ? WlrKeyboardFocus.Exclusive
         : WlrKeyboardFocus.None
 
-    // Слой на весь экран, но полосу себе не резервирует и чужие не учитывает:
-    // иначе меню уехало бы вниз на высоту панели.
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
     visible: false
@@ -104,14 +84,12 @@ PanelWindow {
         onTriggered: if (!root.opened) root.visible = false
     }
 
-    // клик мимо меню — закрыть; лежит под самим меню, так что его не трогает
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: root.close()
     }
 
-    // клавиатура приходит прямо сюда — слой её получает сам
     Item {
         anchors.fill: parent
         focus: true
@@ -122,9 +100,6 @@ PanelWindow {
     MenuSurface {
         id: surface
 
-        // Встаём туда же, куда встало бы всплывающее меню: у своей кромки,
-        // со стороны панели. У верхней — заезжая под неё на popupOverlap,
-        // у остальных — с зазором popupGap.
         x: Theme.barVertical
             ? (Theme.barPosition === "left"
                 ? Theme.barMargin + Theme.barThickness - Theme.popupOverlap
@@ -148,8 +123,6 @@ PanelWindow {
         menuWidth: root.menuWidth
         maximumHeight: root.maximumHeight
 
-        // верхняя панель — стык под кромкой, боковая — он же, повёрнутый,
-        // нижняя — обычная карточка
         attachMode: Theme.barPosition === "top" ? "top"
             : Theme.barVertical ? "side"
             : "card"

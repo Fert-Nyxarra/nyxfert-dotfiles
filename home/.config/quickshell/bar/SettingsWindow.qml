@@ -1,13 +1,3 @@
-// ~/.config/quickshell/bar/SettingsWindow.qml
-// Настройки оболочки, CTRL + SUPER + S. Слева вкладки, справа содержимое.
-//
-// Пока вкладка одна — панель, — но список именно список: добавить следующую
-// значит дописать строку в tabs и блок в содержимое.
-//
-// Как и у выбора обоев, это собственный слой, а не окно Hyprland: окном оно
-// получает фокус и анимацию компоновщика, но ведёт себя не так, как нужно.
-// Появление рисуем сами.
-
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -44,8 +34,7 @@ PanelWindow {
 
     function open(): void {
         root.visible = true;
-        // флаг поднимаем следующим кадром, иначе Behavior не увидит перехода
-        // и карточка родится уже открытой — см. WallpaperPicker
+
         showTimer.restart();
     }
 
@@ -80,7 +69,6 @@ PanelWindow {
 
     onOpenedChanged: if (!root.opened) hideTimer.restart()
 
-    // клик мимо карточки закрывает; затемнения нет
     MouseArea {
         anchors.fill: parent
         onClicked: root.close()
@@ -103,7 +91,7 @@ PanelWindow {
 
         anchors.centerIn: parent
         width: 720
-        // высоты хватает на самую длинную вкладку — «Окна»
+
         height: 520
         radius: Theme.popupRadius
         color: Theme.panelColor
@@ -134,12 +122,9 @@ PanelWindow {
             }
         }
 
-        // клик по карточке не должен закрывать окно
         MouseArea {
             anchors.fill: parent
         }
-
-        //// вкладки ////////////////////////////////////////////////////////
 
         Rectangle {
             id: sidebar
@@ -220,8 +205,6 @@ PanelWindow {
             }
         }
 
-        //// содержимое вкладки «Панель» ////////////////////////////////////
-
         Item {
             id: page
 
@@ -241,7 +224,6 @@ PanelWindow {
                 color: Colors.text
             }
 
-            // положение
             Text {
                 id: positionLabel
 
@@ -287,7 +269,6 @@ PanelWindow {
                             ColorAnimation { duration: 140 }
                         }
 
-                        // схематичный экран с полоской панели у нужной кромки
                         Rectangle {
                             id: screenPreview
 
@@ -335,7 +316,6 @@ PanelWindow {
                 }
             }
 
-            // режим
             Text {
                 id: modeLabel
 
@@ -385,7 +365,6 @@ PanelWindow {
                             ColorAnimation { duration: 140 }
                         }
 
-                        // мини-экран: остров с отступами против полосы впритык
                         Rectangle {
                             id: modePreview
 
@@ -447,8 +426,6 @@ PanelWindow {
             }
         }
 
-        //// содержимое вкладки «Окна» //////////////////////////////////////
-
         Item {
             id: windowsPage
 
@@ -468,7 +445,6 @@ PanelWindow {
                 color: Colors.text
             }
 
-            // раскладка окон с живым предпросмотром
             Text {
                 id: layoutLabel
 
@@ -521,7 +497,6 @@ PanelWindow {
                             ColorAnimation { duration: 140 }
                         }
 
-                        // мини-экран с окнами
                         Rectangle {
                             id: preview
 
@@ -539,7 +514,6 @@ PanelWindow {
                                 ? Colors.primary
                                 : Colors.subtext
 
-                            // тайлинг: одно большое слева, два справа
                             Rectangle {
                                 visible: !parent.parent.scrolling
                                 x: 5
@@ -572,7 +546,6 @@ PanelWindow {
                                 opacity: 0.55
                             }
 
-                            // скроллинг: лента колонок, уезжающая за край
                             Row {
                                 id: strip
 
@@ -580,8 +553,6 @@ PanelWindow {
                                 y: 5
                                 spacing: 4
 
-                                // лента едет влево и возвращается — видно, что
-                                // она бесконечная, а не просто три окна
                                 SequentialAnimation on x {
                                     running: strip.visible
                                     loops: Animation.Infinite

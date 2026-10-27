@@ -1,7 +1,3 @@
-// ~/.config/quickshell/bar/Tray.qml
-// Системный трей (StatusNotifierItem).
-// ЛКМ — активировать, ПКМ — контекстное меню приложения, СКМ — вторичное действие.
-
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
@@ -12,7 +8,6 @@ import qs.widgets
 BarItem {
     id: root
 
-    // пустой модуль не показываем
     visible: SystemTray.items.values.length > 0
 
     horizontalPadding: 10

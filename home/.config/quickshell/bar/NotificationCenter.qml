@@ -1,9 +1,3 @@
-// ~/.config/quickshell/bar/NotificationCenter.qml
-// Центр уведомлений: список всех пришедших уведомлений.
-//
-// Как и меню питания, он прижат к краю острова (edgeInset: 0) — только к
-// левому, — а Bar.qml по его флагу разглаживает нижний левый угол панели.
-
 import QtQuick
 import qs
 import qs.widgets
@@ -15,7 +9,6 @@ Popup {
     preferredWidth: 380
     maximumWidth: 380
 
-    // шапка: заголовок, «не беспокоить» и «очистить»
     Item {
         width: root.contentWidth
         implicitHeight: 32
@@ -37,7 +30,6 @@ Popup {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
-            // «Не беспокоить»: плашки молчат, список продолжает копиться
             Rectangle {
                 implicitWidth: 30
                 implicitHeight: 24

@@ -1,18 +1,4 @@
 #!/usr/bin/env bash
-# screenrec — запись экрана в Hyprland поверх wf-recorder.
-#
-#   screenrec screen   — весь активный монитор
-#   screenrec region   — выделенная мышью область
-#   screenrec window   — окно, выбранное кликом
-#   screenrec stop     — остановить запись
-#
-# Повторный вызов в любом режиме, пока идёт запись, останавливает её.
-#
-# Переменные окружения:
-#   REC_DIR    куда складывать файлы (по умолчанию ~/Videos/Recordings)
-#   REC_AUDIO  system | mic | none   (по умолчанию system — звук с колонок)
-#   REC_CODEC  кодек ffmpeg          (по умолчанию libx264)
-#   REC_FPS    кадров в секунду      (по умолчанию 60)
 
 set -uo pipefail
 
@@ -27,9 +13,8 @@ PIDFILE="$RUNDIR/screenrec.pid"
 NAMEFILE="$RUNDIR/screenrec.file"
 LOGFILE="$RUNDIR/screenrec.log"
 
-notify() {  # notify <иконка hyprctl> <текст>
-    # Демона org.freedesktop.Notifications в системе нет, поэтому плашку
-    # рисует сам Hyprland.
+notify() {
+
     hyprctl notify "$1" 4000 0 "fontsize:14  $2" >/dev/null 2>&1
     return 0
 }
@@ -46,7 +31,7 @@ running_pid() {
 stop_recording() {
     local pid; pid=$(running_pid) || { notify 0 "Запись не идёт"; return 0; }
     kill -INT "$pid" 2>/dev/null
-    for _ in $(seq 1 50); do           # ждём до 5 с, пока ffmpeg допишет контейнер
+    for _ in $(seq 1 50); do
         kill -0 "$pid" 2>/dev/null || break
         sleep 0.1
     done
@@ -71,7 +56,6 @@ audio_args() {
     esac
 }
 
-# --- геометрия ----------------------------------------------------------
 geom_region() {
     slurp -d || return 1
 }
@@ -90,7 +74,6 @@ active_monitor() {
     hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'
 }
 
-# --- старт --------------------------------------------------------------
 [ "$MODE" = "stop" ] && { stop_recording; exit 0; }
 running_pid >/dev/null && { stop_recording; exit 0; }
 
@@ -106,7 +89,7 @@ case "$MODE" in
         args+=(-o "$mon")
         ;;
     region)
-        g=$(geom_region) || exit 0          # Esc при выделении — просто выходим
+        g=$(geom_region) || exit 0
         args+=(-g "$g")
         ;;
     window)
@@ -122,10 +105,9 @@ FILE="$OUTDIR/$(date +%Y-%m-%d_%H-%M-%S)_$MODE.mp4"
 aud=$(audio_args)
 [ -n "$aud" ] && args+=("$aud")
 
-# pad до чётных размеров: yuv420p не переваривает нечётную ширину/высоту
 args+=(-c "$CODEC" -r "$FPS" -F "pad=ceil(iw/2)*2:ceil(ih/2)*2" -f "$FILE")
 
-start() {  # start [доп. флаги]
+start() {
     wf-recorder "$@" "${args[@]}" >"$LOGFILE" 2>&1 &
     echo $! > "$PIDFILE"
     sleep 1
@@ -133,7 +115,7 @@ start() {  # start [доп. флаги]
 }
 
 if ! start; then
-    # На проприетарном NVIDIA захват через dmabuf порой отваливается.
+
     rm -f "$FILE"
     if ! start --no-dmabuf; then
         rm -f "$PIDFILE" "$FILE"

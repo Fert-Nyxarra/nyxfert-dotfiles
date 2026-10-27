@@ -1,16 +1,5 @@
 pragma Singleton
 
-// ~/.config/quickshell/Settings.qml
-// Пользовательские настройки оболочки — то, что выбрано в окне CTRL + SUPER + S
-// (bar/SettingsWindow.qml).
-//
-// Хранятся ВНЕ конфига, в ~/.local/state/quickshell/settings.json: matugen
-// переписывает Colors.qml, quickshell на это перезагружает конфиг, и всё
-// состояние синглтона обнулилось бы. Поэтому значения читаются прямо из файла,
-// как и у обоев.
-//
-// ВАЖНО: pragma Singleton первой строкой, см. README, раздел «Грабли».
-
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -25,27 +14,13 @@ Singleton {
     readonly property var barPositions: ["top", "bottom", "left", "right"]
     readonly property var barModes: ["island", "panel"]
 
-    // Оформление окон живёт в Hyprland, а не в панели. Храним выбор у себя и
-    // раздаём компоновщику через hyprctl: править hyprland.lua опаснее (это
-    // код, а не набор ключей), да и вернуть прежнее значение из окна настроек
-    // так проще.
     readonly property var windowAnimations: ["off", "slide", "popin", "fast"]
 
-    // Раскладка окон. tiling — штатный dwindle, scrolling — лента колонок,
-    // как в niri. Плагин для этого НЕ нужен: с Hyprland 0.55 раскладка
-    // scrolling встроена (hyprscroller из nixpkgs удалён как заброшенный, а
-    // hyprscrolling исчез из hyprland-plugins именно потому, что уехал в ядро).
     readonly property var windowLayouts: ["tiling", "scrolling"]
 
     readonly property int windowBorderMax: 12
     readonly property int windowRoundingMax: 24
 
-    // Читаем прямо из адаптера: отдельное свойство со встречной записью
-    // замыкает круг «изменилось здесь → изменилось там» и валит QML —
-    // см. README, грабли про JsonAdapter.
-    //
-    // Значение из файла ещё и проверяется: в settings.json могли вписать
-    // руками что угодно, а панель без положения не нарисуется вовсе.
     readonly property string barPosition: store.adapter
         && root.barPositions.indexOf(store.adapter.barPosition) >= 0
         ? store.adapter.barPosition
@@ -56,11 +31,10 @@ Singleton {
         ? store.adapter.barMode
         : "island"
 
-    // панель стоит боком: модули идут столбиком, меню выезжают сбоку
     readonly property bool barVertical: root.barPosition === "left" || root.barPosition === "right"
-    // панель у дальнего края: меню выезжают в обратную сторону
+
     readonly property bool barFlipped: root.barPosition === "bottom" || root.barPosition === "right"
-    // «остров» — со скруглением и отступами, «панель» — во всю кромку
+
     readonly property bool barIsland: root.barMode === "island"
 
     readonly property int windowBorder: store.adapter
@@ -81,13 +55,8 @@ Singleton {
         ? store.adapter.windowAnimation
         : "slide"
 
-    // Настройки прочитаны (или точно не будут). Панель ждёт этого флага,
-    // прежде чем показаться: слой wlr-layer-shell коммитит свои отступы при
-    // первом показе, и пришедшее следом значение их уже не переставит —
-    // получался остров с прямыми углами.
     property bool loaded: false
 
-    // хоткей CTRL + SUPER + S приходит через IPC в shell.qml
     signal toggleRequested
 
     function toggle(): void {
@@ -136,13 +105,6 @@ Singleton {
         root.applyWindowStyle();
     }
 
-    // Кусок конфига на Lua для hyprctl eval: задаём и появление, и
-    // исчезновение. Одного leaf "windows" мало — в hyprland.lua отдельной
-    // строкой задан windowsOut, а явно заданный потомок перебивает родителя,
-    // и окна закрывались бы всегда одинаково.
-    //
-    // Уход делаем чуть быстрее прихода и без перелёта: пружина на закрытии
-    // читается как подвисание.
     function animationSnippet(kind: string): string {
         if (kind === "off") {
             return 'hl.animation({ leaf = "windowsIn", enabled = false }) '
@@ -192,13 +154,8 @@ Singleton {
 
     Process { id: applyProcess }
 
-    // Настройки раздаются компоновщику при запуске и после каждой его
-    // перезагрузки: `hyprctl reload` (его зовёт matugen после смены обоев)
-    // возвращает значения из hyprland.lua и затирает наши.
     onLoadedChanged: if (root.loaded) root.applyWindowStyle()
 
-    // Значения могли измениться не только из окна настроек, но и правкой
-    // файла руками — раздаём компоновщику любое изменение.
     onWindowBorderChanged: if (root.loaded) root.applyWindowStyle()
     onWindowRoundingChanged: if (root.loaded) root.applyWindowStyle()
     onWindowAnimationChanged: if (root.loaded) root.applyWindowStyle()
@@ -211,7 +168,6 @@ Singleton {
         }
     }
 
-    // каталог для состояния может ещё не существовать
     Process {
         running: true
         command: ["mkdir", "-p", root.stateDir]
@@ -222,10 +178,6 @@ Singleton {
 
         path: root.statePath
 
-        // Читаем СИНХРОННО: иначе панель успевает родиться со значениями по
-        // умолчанию, слой коммитит островные отступы, а приехавший следом
-        // «panel» меняет только то, что рисует QML. Получается остров с
-        // прямыми углами — отступы уже не переставить.
         blockLoading: true
 
         watchChanges: true
@@ -233,8 +185,6 @@ Singleton {
 
         onLoaded: root.loaded = true
 
-        // файла может не быть — это нормально, тогда остаются значения по
-        // умолчанию, и они же сразу записываются
         onLoadFailed: {
             store.writeAdapter();
             root.loaded = true;

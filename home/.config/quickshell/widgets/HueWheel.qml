@@ -1,10 +1,3 @@
-// ~/.config/quickshell/widgets/HueWheel.qml
-// Кольцо оттенков: сектора по кругу, выбор мышью.
-//
-// Тон и насыщенность фиксированы, меняется только оттенок — от источника
-// matugen всё равно оставляет лишь его, остальное задаёт спецификация
-// Material You и ручка контраста.
-
 import QtQuick
 import QtQuick.Shapes
 import qs
@@ -16,7 +9,6 @@ Item {
     property real saturation: 0.68
     property real brightness: 0.92
 
-    // индекс выбранного сектора, -1 — не выбран ни один
     property int selected: -1
 
     readonly property real centerX: wheel.width / 2
@@ -45,8 +37,6 @@ Item {
             readonly property bool isSelected: wheel.selected === modelData
             readonly property bool isHovered: hit.hovered === modelData
 
-            // выбранный сектор выезжает наружу, наведённый — чуть-чуть.
-            // Не readonly: на readonly нельзя повесить Behavior.
             property real reach: wheel.outerRadius
                 + (isSelected ? 7 : isHovered ? 3 : 0)
 
@@ -66,8 +56,6 @@ Item {
                 strokeColor: sector.isSelected ? Colors.text : "transparent"
                 strokeWidth: sector.isSelected ? 2 : 0
 
-                // сектор-кольцо: дуга наружу, дуга обратно по внутреннему
-                // радиусу, замыкание — само собой при заливке
                 PathAngleArc {
                     centerX: wheel.centerX
                     centerY: wheel.centerY
@@ -91,8 +79,6 @@ Item {
         }
     }
 
-    // один обработчик на всё кольцо: сектор считаем по углу и радиусу,
-    // шестнадцать отдельных MouseArea тут были бы лишними
     MouseArea {
         id: hit
 

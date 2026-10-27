@@ -1,10 +1,3 @@
-// ~/.config/quickshell/bar/ControlCenter.qml
-// Контрол-центр: ползунки яркости и громкости в один ряд, плеер, сети Wi-Fi
-// и устройства вывода звука. Заменил собой отдельные меню громкости и сети.
-//
-// Ползунок яркости появляется только там, где есть подсветка (см.
-// Brightness.qml) — на стационарной машине ряд остаётся с одной громкостью.
-
 import QtQuick
 import Quickshell
 import Quickshell.Networking
@@ -18,10 +11,9 @@ Popup {
     title: "Центр управления"
     preferredWidth: 380
     maximumWidth: 380
-    // клавиатура нужна, только когда спрашиваем пароль Wi-Fi
+
     wantsKeyboard: root.pendingNetwork !== null
 
-    // ── звук ────────────────────────────────────────────────────────────
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var audio: root.sink ? root.sink.audio : null
     readonly property real volume: root.audio ? root.audio.volume : 0
@@ -45,7 +37,6 @@ Popup {
         objects: root.sinks
     }
 
-    // ── сети ────────────────────────────────────────────────────────────
     readonly property var devices: Networking.devices ? Networking.devices.values : []
     readonly property var wifiDevice: root.devices.find(d => d.type === DeviceType.Wifi) ?? null
     readonly property var wiredDevice: root.devices.find(d => d.type === DeviceType.Wired) ?? null
@@ -103,7 +94,6 @@ Popup {
         root.pendingNetwork = null;
     }
 
-    // ввод приходит из панели (см. Popup.wantsKeyboard)
     function handleKey(event): void {
         event.accepted = true;
 
@@ -118,7 +108,6 @@ Popup {
 
     onKeyPressed: event => root.handleKey(event)
 
-    // сканируем, пока центр открыт
     Binding {
         target: root.wifiDevice
         property: "scannerEnabled"
@@ -128,9 +117,6 @@ Popup {
 
     onOpenedChanged: if (!root.opened) root.cancelPassword()
 
-    // ── содержимое ──────────────────────────────────────────────────────
-
-    // ползунки в один ряд
     Item {
         width: root.contentWidth
         implicitHeight: 158
@@ -167,7 +153,6 @@ Popup {
         visible: Networking.wifiEnabled || root.wiredDevice
     }
 
-    // ── сети ────────────────────────────────────────────────────────────
     MenuRow {
         width: root.contentWidth
         glyph: Networking.wifiEnabled ? "󰖩" : "󰖪"
@@ -210,12 +195,11 @@ Popup {
                 : ""
 
             onClicked: root.activate(modelData)
-            // ПКМ по сохранённой сети — забыть её
+
             onRightClicked: if (modelData.known) modelData.forget()
         }
     }
 
-    // поле пароля для незнакомой защищённой сети
     Item {
         width: root.contentWidth
         implicitHeight: visible ? Theme.rowHeight + 8 : 0
@@ -264,7 +248,6 @@ Popup {
                 color: Colors.outline
             }
 
-            // каретка: поля ввода нет, рисуем сами
             Rectangle {
                 x: 30 + Math.min(pskText.contentWidth, pskText.width) + 1
                 anchors.verticalCenter: parent.verticalCenter
@@ -293,7 +276,6 @@ Popup {
         visible: root.sinks.length > 0
     }
 
-    // ── вывод звука ─────────────────────────────────────────────────────
     Repeater {
         model: root.sinks
 

@@ -1,11 +1,3 @@
-// ~/.config/quickshell/bar/WallpaperPicker.qml
-// Выбор обоев: слайды со стрелками, палитра для «приоритетного» цвета
-// matugen и применение по Enter.
-//
-// Это собственный слой, а не окно Hyprland: окном оно получало фокус и
-// анимацию компоновщика, но вело себя не так, как нужно. Анимацию открытия
-// рисуем сами — выезд с лёгким перелётом, в тон остальной панели.
-
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -18,22 +10,19 @@ PanelWindow {
 
     property bool opened: false
     property int index: 0
-    // пустая строка — цвет подбирает сам matugen
+
     property string selectedColor: ""
-    // -1 глубже и насыщеннее, 0 стандарт Material You, 1 бледнее
+
     property real contrast: 0
-    // чёрно-белая схема: ни оттенок, ни контраст на неё не влияют
+
     property bool mono: false
 
-    // Параметры кольца держим здесь: на id внутри карточки ссылаться
-    // нельзя — её содержимое создаётся только при первом показе окна.
     readonly property int hueSteps: 16
 
     function hueColor(index: int): color {
         return Qt.hsva(index / root.hueSteps, 0.68, 0.92, 1);
     }
 
-    // схема из matugen для превью: роль -> цвет тёмной темы
     property var previewTheme: null
 
     function tone(role: string, fallback: color): color {
@@ -43,8 +32,6 @@ PanelWindow {
         return value !== undefined ? value : fallback;
     }
 
-    // какой сектор кольца соответствует выбранному цвету (-1 — никакой:
-    // цвет либо «авто», либо закреплён ещё старой палитрой)
     readonly property int selectedHue: {
         if (root.selectedColor === "") return -1;
 
@@ -55,7 +42,6 @@ PanelWindow {
         return -1;
     }
 
-    // строка поиска: фильтруем по имени файла, регистр не важен
     property string query: ""
 
     readonly property var files: {
@@ -91,7 +77,7 @@ PanelWindow {
     }
 
     function open(): void {
-        // открываемся на текущих обоях и их закреплённом цвете
+
         root.query = "";
 
         const at = root.files.indexOf(WallpaperService.current);
@@ -100,9 +86,7 @@ PanelWindow {
         root.contrast = WallpaperService.contrastFor(root.current);
         root.mono = WallpaperService.monoFor(root.current);
         root.visible = true;
-        // Behaviors должны увидеть переход 0 → 1. На момент первого показа
-        // сцена только создаётся, и если поднять флаг тут же, карточка
-        // родится уже открытой и просто мигнёт. Поэтому — следующим кадром.
+
         showTimer.restart();
     }
 
@@ -129,9 +113,6 @@ PanelWindow {
         root.close();
     }
 
-    // Превью считает сам matugen в режиме --dry-run: он печатает схему в
-    // JSON и при этом не трогает ни шаблоны, ни обои, ни запущенные
-    // программы. Значит, в карточке видно ровно то, что применится.
     function refreshPreview(): void {
         if (root.current === "") return;
 
@@ -141,8 +122,6 @@ PanelWindow {
         previewProcess.running = true;
     }
 
-    // листание и ручка контраста сыплют изменениями пачками, поэтому
-    // запускаем matugen не на каждое, а через паузу
     Timer {
         id: previewTimer
         interval: 180
@@ -159,7 +138,6 @@ PanelWindow {
         previewTimer.restart();
     }
 
-    // после фильтра показываем первое совпадение
     onQueryChanged: root.index = 0
 
     Process {
@@ -175,8 +153,7 @@ PanelWindow {
 
                     root.previewTheme = dark;
                 } catch (error) {
-                    // matugen мог не разобрать картинку — оставляем прошлое
-                    // превью, пустая карточка хуже устаревшей
+
                 }
             }
         }
@@ -196,7 +173,6 @@ PanelWindow {
         onTriggered: if (root.visible) root.opened = true
     }
 
-    // окно живёт, пока карточка не доиграла уход
     Timer {
         id: hideTimer
         interval: 260
@@ -208,12 +184,10 @@ PanelWindow {
         else hideTimer.restart();
     }
 
-    // затемнения нет: ловим только клик мимо карточки
     MouseArea {
         anchors.fill: parent
         onClicked: root.close()
     }
-
 
     Rectangle {
         id: card
@@ -226,9 +200,6 @@ PanelWindow {
         border.width: 1
         border.color: Theme.panelBorder
 
-        // Появление: короткий выезд снизу с лёгким перелётом плюс проявление.
-        // Пружина на смещении и масштабе, прозрачность быстрее — иначе
-        // карточка кажется тяжёлой.
         opacity: root.opened ? 1 : 0
         scale: root.opened ? 1 : 0.93
         anchors.verticalCenterOffset: root.opened ? 0 : 26
@@ -256,14 +227,10 @@ PanelWindow {
             }
         }
 
-        // клик по карточке не должен закрывать окно
         MouseArea {
             anchors.fill: parent
         }
 
-        // Поиск по имени файла. Сетку миниатюр сюда уже не впихнуть —
-        // карточка и так большая, а строка решает ту же задачу: добраться
-        // до нужных обоев, не листая всю папку.
         Rectangle {
             id: searchBox
 
@@ -303,9 +270,6 @@ PanelWindow {
 
                 onTextChanged: root.query = text
 
-                // Клавиатуру забирает поле, поэтому листание и применение
-                // разбираются здесь же. Стрелки отданы слайдам: имена файлов
-                // короткие, курсор внутри строки двигать незачем.
                 Keys.onPressed: event => {
                     event.accepted = true;
 
@@ -330,7 +294,6 @@ PanelWindow {
             }
         }
 
-        // счётчик — в ту же строку, справа
         Text {
             x: card.width - width - 16
             anchors.verticalCenter: searchBox.verticalCenter
@@ -342,15 +305,13 @@ PanelWindow {
             color: Colors.subtext
         }
 
-        // слайды
         Item {
             id: stage
 
             x: 12
             y: searchBox.y + searchBox.height + 12
             width: parent.width - 24
-            // на невысоких экранах предпросмотр ужимаем, иначе карточка
-            // не влезет вместе с кольцом
+
             height: Math.min(Math.round(width * 9 / 16), root.height - 546)
             clip: true
 
@@ -381,7 +342,6 @@ PanelWindow {
             }
         }
 
-        // подпись
         Text {
             x: 16
             y: stage.y + stage.height + 12
@@ -392,7 +352,6 @@ PanelWindow {
             color: Colors.text
         }
 
-        // кольцо оттенков, в середине — «авто»
         Item {
             id: controls
 
@@ -419,7 +378,6 @@ PanelWindow {
                 onPicked: (index, value) => root.selectedColor = value.toString()
             }
 
-            // дырка кольца: цвет подбирает сам matugen по картинке
             Rectangle {
                 id: autoButton
 
@@ -457,7 +415,6 @@ PanelWindow {
                 }
             }
 
-            // выбранный акцент и ручка контраста
             Column {
                 x: 192
                 y: 6
@@ -495,13 +452,6 @@ PanelWindow {
                     }
                 }
 
-                // Чёрно-белая тема — отдельный переключатель, а не ещё
-                // один цвет в кольце: matugen строит её другой схемой, и ни
-                // оттенок, ни контраст на неё не влияют. Поэтому всё
-                // остальное при включении гаснет.
-                // MouseArea с anchors.fill внутри Row ломает сам Row —
-                // поэтому строка завёрнута в Item, а обработчик лежит
-                // поверх него.
                 Item {
                     width: monoRow.implicitWidth
                     height: monoRow.implicitHeight
@@ -572,10 +522,6 @@ PanelWindow {
                     color: Colors.text
                 }
 
-                // Ручка глубины: тон акцента в тёмной теме задан
-                // спецификацией, и от исходного цвета выживает только
-                // оттенок. Минус опускает тон — цвета становятся
-                // насыщеннее, плюс поднимает — бледнее.
                 Item {
                     id: contrastBar
 
@@ -605,7 +551,6 @@ PanelWindow {
                         color: Theme.alpha(Colors.outline, 0.35)
                     }
 
-                    // засечка стандартного значения
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         x: contrastBar.width / 2 - 1
@@ -615,7 +560,6 @@ PanelWindow {
                         color: Theme.alpha(Colors.outline, 0.7)
                     }
 
-                    // заливка от середины к ручке
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         x: Math.min(contrastBar.width / 2, handle.x + handle.width / 2)
@@ -674,9 +618,6 @@ PanelWindow {
             }
         }
 
-        // Превью будущей темы: мини-панель, образцы ролей и мок меню.
-        // Всё рисуется цветами из matugen, а не текущими Colors — видно
-        // результат до применения.
         Item {
             id: preview
 
@@ -693,7 +634,6 @@ PanelWindow {
                 border.color: Theme.panelBorder
             }
 
-            // остров панели
             Rectangle {
                 id: mockBar
 
@@ -766,7 +706,6 @@ PanelWindow {
                 }
             }
 
-            // образцы ролей
             Row {
                 x: 12
                 y: mockBar.y + mockBar.height + 10
@@ -786,7 +725,6 @@ PanelWindow {
                 }
             }
 
-            // мок контекстного меню
             Rectangle {
                 x: preview.width - width - 12
                 y: mockBar.y + mockBar.height + 8
@@ -835,7 +773,6 @@ PanelWindow {
             color: Colors.outline
         }
 
-        // применить мышью
         Rectangle {
             x: card.width - width - 16
             y: card.height - height - 10

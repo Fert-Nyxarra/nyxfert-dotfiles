@@ -1,17 +1,5 @@
 pragma Singleton
 
-// ~/.config/quickshell/Brightness.qml
-// Яркость подсветки через /sys/class/backlight.
-//
-// Устройство ищем сами (имя у каждого ноутбука своё), значение пишем через
-// brightnessctl, если он есть, иначе прямо в sysfs — сработает, когда на
-// файл даны права (udev-правило из пакета brightnessctl или light).
-//
-// На машине без подсветки available остаётся false, и ползунок яркости в
-// контрол-центре просто не показывается.
-//
-// ВАЖНО: pragma Singleton первой строкой, см. README, раздел «Грабли».
-
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -27,7 +15,6 @@ Singleton {
     readonly property bool available: root.device !== "" && root.maxValue > 0
     readonly property real value: root.available ? root.rawValue / root.maxValue : 0
 
-    // значок по уровню — для индикатора яркости
     readonly property string glyph: root.value < 0.34 ? "󰃞"
         : root.value < 0.67 ? "󰃟"
         : "󰃠"
@@ -51,7 +38,6 @@ Singleton {
         command: ["true"]
     }
 
-    // какое устройство подсветки в системе
     Process {
         running: true
         command: ["sh", "-c", "ls -1 /sys/class/backlight 2>/dev/null | head -1"]
@@ -79,15 +65,13 @@ Singleton {
         id: currentFile
 
         path: root.device === "" ? "" : "/sys/class/backlight/" + root.device + "/brightness"
-        // яркость меняют и мимо нас — клавишами ноутбука; следим за файлом,
-        // чтобы индикатор всплывал сразу, а не через опрос
+
         watchChanges: true
 
         onLoaded: root.rawValue = parseInt(this.text()) || 0
         onFileChanged: currentFile.reload()
     }
 
-    // яркость могут менять и мимо нас — клавишами или другой программой
     Timer {
         interval: 2000
         running: root.available

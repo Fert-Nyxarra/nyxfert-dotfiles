@@ -1,17 +1,4 @@
 #!/usr/bin/env bash
-# install.sh — разворачивает окружение на NixOS.
-#
-# Ставит систему модулем desktop.nix (Hyprland, панель, звук, шрифты) и
-# раскладывает конфиги. Ничего не делает молча: каждый шаг печатается, чужие
-# файлы сохраняются рядом с меткой времени, пересборку запрашивает отдельно.
-#
-#   ./install.sh                 разложить всё и спросить про пересборку
-#   ./install.sh --rebuild       сразу пересобрать систему в конце
-#   ./install.sh --dry-run       только показать, что будет сделано
-#   ./install.sh --no-wallpapers не копировать обои
-#   ./install.sh --home-only     не трогать /etc/nixos, только ~
-#
-# Для Arch есть отдельный install-arch.sh в том же наборе.
 
 set -euo pipefail
 
@@ -29,7 +16,20 @@ while [ $# -gt 0 ]; do
         --no-rebuild) REBUILD=no ;;
         --no-wallpapers) WALLPAPERS=0 ;;
         --home-only) HOME_ONLY=1; REBUILD=no ;;
-        -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help)
+            cat <<'USAGE'
+install.sh — разворачивает окружение на NixOS.
+
+  ./install.sh                 разложить всё и спросить про пересборку
+  ./install.sh --rebuild       сразу пересобрать систему в конце
+  ./install.sh --dry-run       только показать, что будет сделано
+  ./install.sh --no-wallpapers не копировать обои
+  ./install.sh --home-only     не трогать /etc/nixos, только ~
+
+Для Arch есть отдельный install-arch.sh в том же наборе.
+USAGE
+            exit 0
+            ;;
         *) echo "неизвестный ключ: $1" >&2; exit 2 ;;
     esac
     shift
@@ -44,8 +44,6 @@ HOST="$(hostname)"
 [ "$DRY" = 1 ] && warn "холостой прогон: ничего не меняется"
 
 install_home_files
-
-#### система ##################################################################
 
 if [ "$HOME_ONLY" = 1 ]; then
     say "ключ --home-only: /etc/nixos не трогаю"
@@ -70,7 +68,6 @@ else
         fi
     fi
 
-    # matugen 4.2+ живёт только во флейке; в nixpkgs 4.0 без --prefer
     if [ -f /etc/nixos/flake.nix ]; then
         if grep -q "matugen" /etc/nixos/flake.nix; then
             say "вход matugen во флейке уже есть"
@@ -100,8 +97,6 @@ SNIP
     fi
 fi
 
-#### пересборка ###############################################################
-
 if [ -f /etc/nixos/flake.nix ]; then
     CMD="sudo nixos-rebuild switch --flake /etc/nixos#$HOST"
 else
@@ -111,7 +106,7 @@ fi
 if [ "$HOME_ONLY" = 0 ]; then
     case "$REBUILD" in
         ask)
-            # в холостом прогоне и без терминала ничего не спрашиваем
+
             if [ "$DRY" = 1 ] || [ ! -t 0 ]; then
                 say "пересборка не запускалась: $CMD"
                 answer=n

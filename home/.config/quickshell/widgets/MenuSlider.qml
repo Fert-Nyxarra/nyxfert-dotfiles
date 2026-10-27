@@ -1,17 +1,9 @@
-// ~/.config/quickshell/widgets/MenuSlider.qml
-// Строка меню с ползунком громкости: значок слева (он же кнопка mute),
-// полоса по центру, проценты справа.
-//
-// Вынесено отдельно, потому что таких строк в меню звука две — вывод и
-// микрофон, — и они отличаются только значком и узлом PipeWire.
-
 import QtQuick
 import qs
 
 Item {
     id: root
 
-    // PwNodeAudio выбранного устройства, может быть null
     property var audio: null
     property string glyph: ""
     property string mutedGlyph: ""

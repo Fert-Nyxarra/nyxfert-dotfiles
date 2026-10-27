@@ -1,7 +1,3 @@
-// ~/.config/quickshell/bar/Notifications.qml
-// Центр уведомлений в панели: колокольчик со счётчиком.
-// ЛКМ — открыть центр, ПКМ — убрать все уведомления.
-
 import QtQuick
 import qs
 import qs.widgets
@@ -9,8 +5,6 @@ import qs.widgets
 BarItem {
     id: root
 
-    // по этому числу Bar гасит свой угол — синхронно с выездом меню; к краю
-    // прижаты и центр, и плашка нового уведомления
     readonly property real menuProgress: Math.max(center.revealProgress, toast.revealProgress)
 
     readonly property int count: NotificationService.count
@@ -32,12 +26,11 @@ BarItem {
         anchorItem: root
     }
 
-    // пока центр открыт, плашки не нужны — уведомление и так видно в списке
     Connections {
         target: NotificationService
 
         function onArrived(notification): void {
-            if (NotificationService.dnd) return; // тишина: уведомление уйдёт в центр
+            if (NotificationService.dnd) return;
             if (!center.opened) toast.show(notification);
         }
     }
@@ -47,8 +40,6 @@ BarItem {
             ? Colors.subtext
             : root.count > 0 ? Colors.primary : Colors.subtext
 
-        // в тишине колокольчик перечёркнут, но счётчик остаётся — иначе
-        // непонятно, что за время молчания что-то пришло
         text: (NotificationService.dnd
                 ? "󰂛 "
                 : root.count > 0 ? "󱅫 " : "󰂚 ")

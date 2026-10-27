@@ -1,7 +1,3 @@
-// ~/.config/quickshell/widgets/SettingSlider.qml
-// Ползунок целого значения для окна настроек: подпись слева, значение
-// справа, полоса под ними. Ноль можно подписать словом («выкл»).
-
 import QtQuick
 import qs
 
@@ -15,7 +11,6 @@ Item {
     property string unit: "px"
     property string zeroLabel: ""
 
-    // ползунок двигают — наружу уходит новое значение
     signal moved(int value)
 
     readonly property real fraction: root.to > root.from

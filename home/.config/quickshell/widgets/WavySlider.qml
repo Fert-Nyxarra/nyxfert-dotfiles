@@ -1,11 +1,3 @@
-// ~/.config/quickshell/widgets/WavySlider.qml
-// Полоса воспроизведения «змейкой» — как wavy progress в Material 3
-// Expressive: пройденная часть идёт волной, оставшаяся прямой линией.
-//
-// Волна не пересчитывается каждый кадр: она построена один раз с запасом в
-// одну длину волны и просто едет влево, а клип показывает ровно пройденную
-// часть. На паузе амплитуда уходит в ноль — линия распрямляется.
-
 import QtQuick
 import QtQuick.Shapes
 import qs
@@ -13,7 +5,7 @@ import qs
 Item {
     id: root
 
-    property real value: 0          // 0..1
+    property real value: 0
     property bool playing: false
     property bool interactive: true
 
@@ -23,9 +15,6 @@ Item {
     readonly property int wavelength: 22
     readonly property real amplitude: 3.5
 
-    // Амплитуда гаснет на паузе, и линия распрямляется. Анимируем именно её,
-    // а не масштаб: масштабом по вертикали схлопывалась бы и сама обводка,
-    // и на паузе от полосы не оставалось бы ничего.
     property real waveAmplitude: root.playing ? root.amplitude : 0
 
     Behavior on waveAmplitude {
@@ -37,7 +26,7 @@ Item {
     readonly property real thickness: 3.5
     readonly property int handleWidth: 4
     readonly property int handleHeight: 16
-    // зазор между волной и ручкой, как в оригинале
+
     readonly property int handleGap: 5
 
     signal moved(real value)
@@ -46,7 +35,6 @@ Item {
 
     readonly property real progressX: Math.max(0, Math.min(1, root.value)) * root.width
 
-    // волна строится один раз на ширину полосы плюс период
     readonly property var wavePoints: {
         const points = [];
         const total = root.width + root.wavelength;
@@ -60,7 +48,6 @@ Item {
         return points;
     }
 
-    // оставшаяся часть — прямая линия
     Rectangle {
         x: root.progressX + root.handleGap + root.handleWidth
         width: Math.max(0, root.width - x)
@@ -70,7 +57,6 @@ Item {
         color: root.inactiveColor
     }
 
-    // пройденная часть — волна, подрезанная по текущему положению
     Item {
         width: Math.max(0, root.progressX - root.handleGap)
         height: parent.height
@@ -83,7 +69,6 @@ Item {
             height: root.height
             preferredRendererType: Shape.CurveRenderer
 
-            // волна едет влево ровно на период и начинает заново
             NumberAnimation on x {
                 running: root.playing
                 loops: Animation.Infinite
@@ -106,7 +91,6 @@ Item {
         }
     }
 
-    // ручка — короткая вертикальная пилюля, как в Material 3
     Rectangle {
         x: root.progressX
         anchors.verticalCenter: parent.verticalCenter

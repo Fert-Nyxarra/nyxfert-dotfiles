@@ -1,12 +1,3 @@
-// ~/.config/quickshell/bar/Volume.qml
-// Громкость основного вывода PipeWire. В панели только значок: без звука,
-// тихо, средне, громко — проценты показывает всплывающий индикатор.
-//
-// ЛКМ — mute, ПКМ — меню устройств вывода, колесо — громкость шагом 5%.
-//
-// Этот же модуль показывает индикатор ЯРКОСТИ: отдельного значка у неё нет,
-// а всплывающее меню нужно к чему-то прицепить.
-
 import QtQuick
 import Quickshell.Services.Pipewire
 import qs
@@ -15,8 +6,6 @@ import qs.widgets
 BarItem {
     id: root
 
-    // монитор панели и признак полного экрана приходят из Bar.qml: при
-    // фуллскрине панель спрятана, и громкость показывается пилюлей снизу
     required property var barScreen
     required property bool fullscreen
 
@@ -29,7 +18,6 @@ BarItem {
     interactive: true
     active: outputs.opened
 
-    // без трекера PipeWire не отдаёт подробные данные об устройстве
     PwObjectTracker {
         objects: root.sink ? [root.sink] : []
     }
@@ -47,8 +35,6 @@ BarItem {
         root.audio.volume = Math.max(0, Math.min(1, root.audio.volume + step));
     }
 
-    // при запуске громкость «меняется» с нуля на текущую — индикатор на это
-    // реагировать не должен
     property bool indicatorReady: false
 
     Timer {
@@ -65,7 +51,6 @@ BarItem {
     function showVolume(): void {
         if (!root.indicatorReady) return;
 
-        // пока открыто меню устройств, громкость видна в нём самом
         if (outputs.opened) return;
 
         if (root.fullscreen) pill.showVolume();
@@ -82,7 +67,6 @@ BarItem {
     onVolumeChanged: root.showVolume()
     onMutedChanged: root.showVolume()
 
-    // яркость меняют клавишами ноутбука — ловим и показываем тем же индикатором
     Connections {
         target: Brightness
 
@@ -96,7 +80,6 @@ BarItem {
         anchorItem: root
     }
 
-    // меню открыли, пока индикатор ещё висел — убираем его
     Connections {
         target: outputs
 
@@ -121,7 +104,6 @@ BarItem {
         volumeGlyph: root.glyph
     }
 
-    // без звука / тихо / средне / громко
     BarText {
         font.pixelSize: Theme.fontSize + 3
         color: root.muted ? Colors.outline : Colors.primary

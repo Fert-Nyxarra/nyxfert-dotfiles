@@ -1,6 +1,3 @@
-// ~/.config/quickshell/widgets/MenuSeparator.qml
-// Горизонтальный разделитель внутри контекстного меню.
-
 import QtQuick
 import qs
 

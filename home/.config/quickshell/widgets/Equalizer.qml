@@ -1,7 +1,3 @@
-// ~/.config/quickshell/widgets/Equalizer.qml
-// Маленький эквалайзер: четыре столбика, пляшущие, пока идёт воспроизведение.
-// На паузе замирают внизу — так видно, что трек стоит.
-
 import QtQuick
 import qs
 
@@ -42,7 +38,6 @@ Item {
                     NumberAnimation { duration: 180 }
                 }
 
-                // каждый столбик со своим ритмом, иначе они скачут строем
                 SequentialAnimation on height {
                     running: root.playing
                     loops: Animation.Infinite
@@ -61,7 +56,6 @@ Item {
                     }
                 }
 
-                // на паузе столбики опускаются
                 Behavior on height {
                     enabled: !root.playing
                     NumberAnimation { duration: 200 }

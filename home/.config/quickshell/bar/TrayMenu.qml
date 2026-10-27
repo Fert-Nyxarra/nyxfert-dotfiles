@@ -1,10 +1,3 @@
-// ~/.config/quickshell/bar/TrayMenu.qml
-// Контекстное меню иконки трея (DBusMenu приложения), нарисованное в стиле
-// панели вместо системного меню Qt.
-//
-// Подменю не плодят вложенные окна: меню переключается внутрь подменю и
-// показывает строку «Назад». Стек открытых подменю лежит в path.
-
 import QtQuick
 import Quickshell
 import qs
@@ -13,10 +6,8 @@ import qs.widgets
 Popup {
     id: root
 
-    // SystemTrayItem, которому принадлежит меню
     required property var trayItem
 
-    // стек подменю: последний элемент — то, что показываем сейчас
     property var path: []
 
     title: root.trayItem
@@ -29,7 +20,6 @@ Popup {
         ? root.path[root.path.length - 1]
         : (root.trayItem ? root.trayItem.menu : null)
 
-    // в подписях DBusMenu "&" помечает горячую букву, а "&&" — настоящий амперсанд
     function cleanLabel(text: string): string {
         return (text ?? "").split("&&").map(part => part.replace(/&/g, "")).join("&");
     }
@@ -52,7 +42,6 @@ Popup {
         root.close();
     }
 
-    // QsMenuOpener сообщает приложению, что меню открыто, и отдаёт его пункты
     QsMenuOpener {
         id: opener
         menu: root.currentMenu

@@ -1,11 +1,3 @@
-// ~/.config/quickshell/bar/OutputMenu.qml
-// Контекстное меню звука: выбор устройства вывода, ползунок громкости и
-// ползунок микрофона. Отдельного значка у микрофона в панели нет — он
-// занимал бы место ради одной кнопки, а регулируют его отсюда.
-//
-// Pipewire.defaultAudioSink только для чтения — переключаются через
-// preferredDefaultAudioSink, он и запоминает выбор.
-
 import QtQuick
 import Quickshell.Services.Pipewire
 import qs
@@ -23,7 +15,6 @@ Popup {
     readonly property var currentSink: Pipewire.defaultAudioSink
     readonly property var currentAudio: root.currentSink ? root.currentSink.audio : null
 
-    // микрофон: если входа в системе нет, строка не показывается
     readonly property var currentSource: Pipewire.defaultAudioSource
     readonly property var sourceAudio: root.currentSource ? root.currentSource.audio : null
 
@@ -31,7 +22,6 @@ Popup {
         return node.description || node.nickname || node.name;
     }
 
-    // без трекера PipeWire не отдаёт описания и громкость устройств
     PwObjectTracker {
         objects: root.currentSource
             ? root.sinks.concat([root.currentSource])
@@ -67,7 +57,6 @@ Popup {
 
     MenuSeparator { width: root.contentWidth }
 
-    // ползунки: вывод и микрофон
     MenuSlider {
         width: root.contentWidth
         audio: root.currentAudio

@@ -1,12 +1,3 @@
-// ~/.config/quickshell/widgets/MenuSurface.qml
-// Внешность меню: фон с обрезанной верхней кромкой, обратные скругления
-// («чёлка»), закреплённые шапка и подвал, прокручиваемая середина и ползунок.
-//
-// Вынесено из Popup, потому что то же самое нужно лаунчеру — а он не может
-// быть всплывающим окном: в Hyprland popup либо получает клавиатуру, либо
-// мышь, но не одновременно. Лаунчер поэтому собственный слой (MenuWindow),
-// и обе части переиспользуют эту поверхность.
-
 import QtQuick
 import QtQuick.Shapes
 import Quickshell
@@ -15,27 +6,20 @@ import qs
 Item {
     id: root
 
-    // Фон поднят выше своей верхней границы (так срезается верхняя кромка и
-    // скругления), поэтому обрезаем сами: в полноэкранном слое за нас этого
-    // уже не делает край окна.
     clip: true
 
     property bool opened: false
     property string title: ""
     property int menuWidth: Theme.popupWidth
     property int maximumHeight: 640
-    // грань меню совпала с гранью острова — обратное скругление там не нужно
+
     property bool flushLeft: false
     property bool flushRight: false
 
-    // Как меню крепится к панели:
-    //   "top"  — висит под верхней кромкой: стык со скруглениями, выезд вниз;
-    //   "side" — приклеено к боковой панели: тот же стык, повёрнутый на 90°;
-    //   "card" — обычная карточка (нижняя панель), выезжает со стороны панели.
     property string attachMode: "top"
-    // боковая панель справа: стык зеркалим
+
     property bool sideFlipped: false
-    // откуда выезжает карточка в режиме "card"
+
     property string slideFrom: "bottom"
 
     readonly property bool seamless: root.attachMode !== "card"
@@ -49,7 +33,6 @@ Item {
 
     readonly property bool hovered: hover.hovered
 
-    // выезд или заезд закончился — окну пора показаться или спрятаться
     signal settled
 
     readonly property int notch: Theme.notchRadius
@@ -84,8 +67,6 @@ Item {
         root.headerHeight + root.headerSlotHeight + body.implicitHeight
         + root.footerHeight + Theme.popupPadding * 2)
 
-    // Видимая высота тянется за contentHeight с задержкой: когда список
-    // фильтруется, меню съезжает плавно, а не прыгает на новый размер.
     property real animatedHeight: root.contentHeight
 
     Behavior on animatedHeight {
@@ -95,20 +76,13 @@ Item {
         }
     }
 
-    // длинному меню нужно чуть больше времени на выезд; меню может попросить
-    // свою длительность (лаунчер открывается быстрее остальных)
     property int slideDuration: Math.min(430, 200 + root.contentHeight * 0.3)
 
-    // нижняя грань меню в координатах окна: по ней подрезаются скругления,
-    // пока меню ещё выезжает
     readonly property real menuBottom: surface.y + surface.height
     readonly property real menuRight: root.sideFlipped
         ? root.menuWidth - surface.x
         : surface.x + surface.width
 
-    // Насколько меню выехало: 0 — спрятано под панелью, 1 — на месте.
-    // По этому же числу панель гасит свой угол, поэтому угол и меню идут
-    // синхронно: ни «угол уже острый, а меню ещё нет», ни наоборот.
     readonly property real revealProgress: !root.seamless
         ? (root.opened ? 1 : 0)
         : root.sideAttached
@@ -118,8 +92,6 @@ Item {
             (surface.y + root.animatedHeight + Theme.popupRadius) / root.animatedHeight))
         : 0
 
-    // Окно шире (или выше) самого меню на поля под обратные скругления: у
-    // верхней панели поля по бокам, у боковой — сверху и снизу.
     implicitWidth: root.menuWidth
         + (root.attachMode === "top" ? root.notch * 2 : 0)
 
@@ -129,8 +101,6 @@ Item {
     component NotchCorner: Item {
         id: corner
 
-        // пока из-под панели выезжает скруглённый низ меню, скруглять на
-        // стыке ещё нечего: боковой грани меню там попросту нет
         readonly property real r: Math.max(0, Math.min(root.notch,
             root.menuBottom - Theme.popupRadius - Theme.popupOverlap))
 
@@ -142,7 +112,6 @@ Item {
             anchors.fill: parent
             preferredRendererType: Shape.CurveRenderer
 
-            // материал: прямоугольник минус четверть круга
             ShapePath {
                 fillColor: Theme.panelColor
                 strokeWidth: 0
@@ -162,7 +131,6 @@ Item {
                 PathLine { x: root.notch - corner.r; y: 0 }
             }
 
-            // рамка панели продолжается по дуге
             ShapePath {
                 fillColor: "transparent"
                 strokeColor: Theme.panelBorder
@@ -180,12 +148,9 @@ Item {
         }
     }
 
-    // То же обратное скругление, но для боковой панели: стык идёт по
-    // вертикали, поэтому координаты у шейпа зеркально переставлены (x↔y).
     component SideNotchCorner: Item {
         id: sideCorner
 
-        // пока меню только выезжает из-под панели, скруглять нечего
         readonly property real r: Math.max(0, Math.min(root.notch,
             root.menuRight - Theme.popupRadius - Theme.popupOverlap))
 
@@ -216,7 +181,6 @@ Item {
                 PathLine { x: 0; y: root.notch - sideCorner.r }
             }
 
-            // рамка панели продолжается по дуге
             ShapePath {
                 fillColor: "transparent"
                 strokeColor: Theme.panelBorder
@@ -237,10 +201,6 @@ Item {
     Rectangle {
         id: surface
 
-        // прямоугольник поднят на радиус вверх: верхние скругления и верхняя
-        // рамка остаются за границей окна и не рисуются
-        // У боковой панели меню выезжает вбок, поэтому «лишний» радиус,
-        // который прячется под кромкой, добавляется не к высоте, а к ширине.
         width: root.sideAttached
             ? root.menuWidth + Theme.popupRadius
             : root.menuWidth
@@ -249,10 +209,6 @@ Item {
             ? root.animatedHeight + Theme.popupRadius
             : root.animatedHeight
 
-        // Приклеенное меню стоит за кромкой окна на радиус: скругления и
-        // рамка с той стороны остаются снаружи и не рисуются. Карточка же
-        // целиком внутри окна и уезжает за ту грань, со стороны которой
-        // лежит панель.
         x: root.attachMode === "top" ? root.notch
             : root.sideAttached
                 ? (root.sideFlipped
@@ -271,8 +227,6 @@ Item {
 
         radius: Theme.popupRadius
 
-        // Прямые углы — с той стороны, которой меню прижато к панели. У
-        // верхней это верхние два, у боковой — те, что смотрят на панель.
         topLeftRadius: root.attachMode === "top" ? 0
             : root.sideAttached && !root.sideFlipped ? 0
             : radius
@@ -294,12 +248,10 @@ Item {
                 duration: root.slideDuration
                 easing.type: Easing.OutQuint
 
-                // меню уехало под панель — окно можно гасить
                 onRunningChanged: if (!running && !root.opened) root.settled()
             }
         }
 
-        // карточка у боковой панели уезжает вбок, сигнал нужен и оттуда
         Behavior on x {
             enabled: !root.seamless || root.sideAttached
             NumberAnimation {
@@ -312,8 +264,6 @@ Item {
         Item {
             id: content
 
-            // спрятанный за кромкой радиус не должен съедать содержимое:
-            // сдвигаем его на ту же величину с нужной стороны
             x: root.sideAttached && !root.sideFlipped ? Theme.popupRadius : 0
             y: root.attachMode === "top" ? Theme.popupRadius : 0
             width: parent.width - (root.sideAttached ? Theme.popupRadius : 0)
@@ -344,7 +294,6 @@ Item {
                 spacing: 2
             }
 
-            // Flickable, чтобы длинное меню можно было прокрутить колесом
             Flickable {
                 id: view
 
@@ -367,10 +316,6 @@ Item {
                 }
             }
 
-            // Ползунок прокрутки. Живёт в правом отступе меню, поэтому ничего
-            // не перекрывает и не заставляет строки менять ширину, когда
-            // появляется. Тащим не сам ползунок, а contentY: положение
-            // ползунка на него завязано и подтянется само.
             Rectangle {
                 id: scrollTrack
 
@@ -405,14 +350,12 @@ Item {
                 MouseArea {
                     id: thumbMouse
 
-                    // поле промаха: по четырём пикселям попасть тяжело
                     anchors.fill: parent
                     anchors.margins: -6
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     preventStealing: true
 
-                    // где держим ползунок относительно его верха
                     property real grabOffset: 0
 
                     function trackY(mouseY: real): real {
@@ -429,7 +372,6 @@ Item {
                     onPressed: mouse => {
                         const y = thumbMouse.trackY(mouse.y);
 
-                        // мимо ползунка — прыгаем туда и продолжаем тащить
                         if (y < thumb.y || y > thumb.y + thumb.height)
                             thumbMouse.grabOffset = thumb.height / 2;
                         else
@@ -462,7 +404,6 @@ Item {
         opacity: root.flushLeft ? 0 : 1
     }
 
-    // то же скругление, зеркально: грань меню приходится на локальный x = 1
     NotchCorner {
         x: root.notch + root.menuWidth - 1
         y: 0
@@ -471,7 +412,6 @@ Item {
         transform: Scale { xScale: -1; origin.x: (root.notch + 1) / 2 }
     }
 
-    // стык с боковой панелью: сверху и снизу от меню
     SideNotchCorner {
         x: root.sideFlipped ? root.menuWidth - width : 0
         y: 0
