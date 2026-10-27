@@ -1,9 +1,9 @@
 Setup:  Hyprland + quickshell
-Built:  2026-10-27 20:27 on nixos
+Built:  2026-10-27 20:28 on nixos
 From:   nyxfert
 System: 26.05.20261020.cd4ea8d (Yarara)
 
 Unpack and run:
-  tar xzf kitI.tar.gz
+  tar xzf kitJ.tar.gz
   cd nixos-setup && ./install.sh        # NixOS
   cd nixos-setup && ./install-arch.sh   # Arch

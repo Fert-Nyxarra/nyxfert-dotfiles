@@ -126,5 +126,5 @@ in
     colors, because matugen 4.0 wants a human to pick one in a terminal. Fix
     it with a flake input: inputs.matugen.url = "github:InioX/matugen" plus
     specialArgs = { inherit inputs; }.
-  ''
+  '';
 }
