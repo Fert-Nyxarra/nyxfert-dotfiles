@@ -120,11 +120,11 @@ in
   environment.systemPackages = shellPackages ++ configPackages;
 
   warnings = lib.optional (!matugenFromFlake) ''
-    matugen взят из nixpkgs (4.0), а не из флейка. Панель это переживёт:
-    она сама спрашивает версию и не передаёт --prefer, если его нет. Но
-    режим «авто» в селекторе обоев на картинках с несколькими кандидатами
-    цвета работать не будет — matugen в 4.0 хочет, чтобы выбор сделал
-    человек в терминале. Лечится входом флейка:
-    inputs.matugen.url = "github:InioX/matugen" плюс specialArgs = { inherit inputs; }.
-  '';
+    matugen comes from nixpkgs (4.0) instead of the flake. The bar copes with
+    that: it checks the version and skips --prefer when the option is absent.
+    Automatic wallpaper colors will not work on images with several candidate
+    colors, because matugen 4.0 wants a human to pick one in a terminal. Fix
+    it with a flake input: inputs.matugen.url = "github:InioX/matugen" plus
+    specialArgs = { inherit inputs; }.
+  ''
 }

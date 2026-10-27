@@ -4,6 +4,6 @@ From:   nyxfert
 System: 26.05.20261020.cd4ea8d (Yarara)
 
 Unpack and run:
-  tar xzf kitH.tar.gz
+  tar xzf kitI.tar.gz
   cd nixos-setup && ./install.sh        # NixOS
   cd nixos-setup && ./install-arch.sh   # Arch
